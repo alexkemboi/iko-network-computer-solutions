@@ -8,10 +8,10 @@ return(
     <div class="row">
   <div class="col-md-2 col-sm-6 mt-2 d-flex flex-column text-left">
     <h5 class="text-light font-weight-bold">Products</h5>
-    <a class="text-light" href="/">SMS</a>
-    <a class="text-light" href="/">USSD</a>
-    <a class="text-light" href="/">Voice</a>
-    <a class="text-light" href="/">Airtime</a>
+    <a class="text-light" href="/">Cyber Services</a>
+    <a class="text-light" href="/">Software Development</a>
+    <a class="text-light" href="/">Online Services</a>
+    <a class="text-light" href="/">Computers and accessories</a>
   </div>
   <div class="col-md-2 col-sm-6 mt-2 d-flex flex-column text-left">
     <h5 class="text-light font-weight-bold">Resources</h5>

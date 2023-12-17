@@ -11,7 +11,7 @@ const NavbarComponent = () => {
     <span className="navbar-toggler-icon navbar-light"></span>
   </button>
   <div className="collapse navbar-collapse mt-2" id="navbarTogglerDemo01">
-    <a className="navbar-brand p-2 bg-light mr-50" href="/"> 
+    <a className="navbar-brand p-1 bg-light mr-50 rounded-circle" href="/"> 
         <img src={logo} alt="Logo" className="logo-img navbar-icon " style={style} />                      
     </a>
     <ul className="navbar-nav m-auto" >
@@ -19,8 +19,11 @@ const NavbarComponent = () => {
             <a className="nav-link text-white display-6 font-weight-bolder" href="/">About us</a>
         </li>
         <li className="nav-item dropdown">
+            <a className="nav-link text-white display-6 font-weight-bolder" href="/" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Softwares</a>
+        </li> 
+        <li className="nav-item dropdown">
             <a className="nav-link text-white display-6 font-weight-bolder" href="/" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Cyber</a>
-        </li>     
+        </li>    
         <li className="nav-item dropdown">
             <a className="nav-link text-white display-6 font-weight-bolder" href="/" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Computers</a>
         </li>
@@ -33,8 +36,8 @@ const NavbarComponent = () => {
             <a className="nav-link text-white display-6 font-weight-bolder" href="/">Contact Us</a>
         </li>
         <li className="nav-item">
-            <a className="nav-link text-success bg-white rounded display-6 font-weight-bolder p-2" href="/">
-                <i className="fas fa-user mr-2"></i>login
+            <a className="nav-link text-success bg-white rounded-pill  py-2 px-4 font-weight-bold" href="/">
+               login
             </a>
         </li>
     </ul>
