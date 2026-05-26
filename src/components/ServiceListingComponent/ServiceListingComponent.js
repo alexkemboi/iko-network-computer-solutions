@@ -17,37 +17,37 @@ const ServiceListComponent = () => {
     {
       name: "Graphic Design",
       description:
-        "Create visually compelling designs for digital and print media. From logos and brand identity to marketing materials and illustrations, we transform ideas into impactful visuals.",
+        "Create visually compelling designs for digital and print media. From logos and branding to marketing materials that elevate your business identity.",
       icon: FaPaintBrush,
     },
     {
       name: "Online Services",
       description:
-        "Expand your digital presence with professional website development, e-commerce solutions, SEO optimization, and digital marketing strategies tailored for growth.",
+        "Professional web solutions, e-commerce platforms, online support services, SEO optimization, and digital transformation solutions.",
       icon: FaGlobe,
     },
     {
       name: "CCTV Installation",
       description:
-        "Protect your business and property with modern surveillance systems featuring professional installation, configuration, monitoring, and maintenance services.",
+        "Protect your premises with modern surveillance systems, professional installation, monitoring solutions, and security consultation.",
       icon: FaVideo,
     },
     {
       name: "Network Installation",
       description:
-        "Build a reliable and secure network infrastructure with expert router, switch, wireless, and enterprise connectivity solutions for seamless operations.",
+        "Enterprise networking solutions including routers, switches, structured cabling, wireless infrastructure, and connectivity optimization.",
       icon: FaNetworkWired,
     },
     {
       name: "Branding",
       description:
-        "Develop a powerful and memorable brand identity through strategic positioning, logo creation, visual systems, and cohesive brand communication.",
+        "Build a memorable identity through logo design, brand strategy, visual consistency, and professional marketing collateral.",
       icon: FaIdBadge,
     },
     {
       name: "Computer Maintenance",
       description:
-        "Maximize system performance with proactive maintenance, troubleshooting, software updates, security checks, repairs, and technical support services.",
+        "Comprehensive diagnostics, repairs, upgrades, software optimization, preventive maintenance, and technical support.",
       icon: FaLaptopMedical,
     },
   ];
@@ -64,13 +64,13 @@ const ServiceListComponent = () => {
   const cardVariants = {
     hidden: {
       opacity: 0,
-      y: shouldReduceMotion ? 0 : 30,
+      y: shouldReduceMotion ? 0 : 25,
     },
     visible: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: 0.6,
+        duration: 0.55,
       },
     },
   };
@@ -81,13 +81,14 @@ const ServiceListComponent = () => {
         <div className="bg-orb orb-left"></div>
         <div className="bg-orb orb-right"></div>
 
+        <div className="section-top-border"></div>
+
         <div className="container">
           <motion.div
             className="section-header"
             initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
           >
             <span className="section-badge">
               PROFESSIONAL BUSINESS SOLUTIONS
@@ -98,9 +99,9 @@ const ServiceListComponent = () => {
             </h2>
 
             <p className="section-description">
-              We provide innovative technology, branding, networking, and
-              digital solutions designed to help businesses operate efficiently,
-              strengthen their brand presence, and achieve sustainable growth.
+              We provide innovative technology, branding, networking, cyber,
+              and digital solutions that help businesses improve efficiency,
+              strengthen their brand presence, and accelerate growth.
             </p>
           </motion.div>
 
@@ -118,15 +119,14 @@ const ServiceListComponent = () => {
                 <motion.article
                   key={service.name}
                   variants={cardVariants}
+                  className="service-card"
                   whileHover={
                     shouldReduceMotion
                       ? {}
                       : {
                           y: -10,
-                          scale: 1.02,
                         }
                   }
-                  className="service-card"
                 >
                   <div className="card-glow"></div>
 
@@ -136,12 +136,11 @@ const ServiceListComponent = () => {
                       shouldReduceMotion
                         ? {}
                         : {
-                            scale: 1.1,
-                            rotate: 5,
+                            scale: 1.08,
                           }
                     }
                   >
-                    <Icon size={30} />
+                    <Icon size={34} />
                   </motion.div>
 
                   <h3>{service.name}</h3>
@@ -161,201 +160,295 @@ const ServiceListComponent = () => {
             })}
           </motion.div>
         </div>
+
+        <div className="section-bottom-border"></div>
       </section>
 
       <style>{`
-        .services-section {
-          position: relative;
-          overflow: hidden;
-          padding: 100px 20px;
-          background: linear-gradient(
-            180deg,
-            #ffffff 0%,
-            #f8fffb 50%,
-            #ffffff 100%
-          );
-        }
+       .services-section {
+  position: relative;
+  padding: 110px 20px;
+  overflow: hidden;
 
-        .container {
-          max-width: 1400px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 2;
-        }
+  background: linear-gradient(
+    135deg,
+    #004d2a 0%,
+    #006b3b 35%,
+    #009b55 100%
+  );
+}
 
-        .section-header {
-          text-align: center;
-          max-width: 850px;
-          margin: 0 auto 70px;
-        }
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
 
-        .section-badge {
-          display: inline-block;
-          padding: 10px 18px;
-          border-radius: 999px;
-          background: rgba(0, 155, 85, 0.12);
-          color: #009b55;
-          font-size: 0.8rem;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          margin-bottom: 20px;
-        }
+.section-top-border,
+.section-bottom-border {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 4px;
 
-        .section-title {
-          font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 800;
-          line-height: 1.1;
-          color: #0f172a;
-          margin-bottom: 20px;
-        }
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #34d399,
+    #ffffff,
+    #34d399,
+    transparent
+  );
+}
 
-        .section-title span {
-          background: linear-gradient(135deg, #009b55, #19c37d);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
+.section-top-border {
+  top: 0;
+}
 
-        .section-description {
-          font-size: 1.1rem;
-          color: #64748b;
-          line-height: 1.8;
-        }
+.section-bottom-border {
+  bottom: 0;
+}
 
-        .services-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          gap: 24px;
-        }
+.section-header {
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto 80px;
+}
 
-        .service-card {
-          position: relative;
-          padding: 35px;
-          border-radius: 28px;
-          background: rgba(255, 255, 255, 0.8);
-          backdrop-filter: blur(14px);
-          border: 1px solid rgba(255, 255, 255, 0.9);
-          box-shadow:
-            0 12px 30px rgba(15, 23, 42, 0.06),
-            0 10px 40px rgba(0, 155, 85, 0.08);
-          overflow: hidden;
-          transition: all 0.35s ease;
-        }
+.section-badge {
+  display: inline-block;
+  padding: 12px 22px;
 
-        .service-card:hover {
-          box-shadow:
-            0 25px 60px rgba(15, 23, 42, 0.12),
-            0 10px 35px rgba(0, 155, 85, 0.18);
-        }
+  border-radius: 999px;
 
-        .card-glow {
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          background: linear-gradient(
-            135deg,
-            rgba(0, 155, 85, 0.08),
-            rgba(25, 195, 125, 0.02)
-          );
-          opacity: 0;
-          transition: opacity 0.35s ease;
-        }
+  background: rgba(255,255,255,0.12);
 
-        .service-card:hover .card-glow {
-          opacity: 1;
-        }
+  border: 1px solid rgba(255,255,255,0.15);
 
-        .icon-wrapper {
-          width: 80px;
-          height: 80px;
-          border-radius: 22px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 24px;
-          background: linear-gradient(135deg, #009b55, #19c37d);
-          color: #ffffff;
-          box-shadow: 0 15px 35px rgba(0, 155, 85, 0.3);
-        }
+  color: #d1fae5;
 
-        .service-card h3 {
-          font-size: 1.4rem;
-          font-weight: 700;
-          color: #0f172a;
-          margin-bottom: 15px;
-        }
+  font-size: .85rem;
 
-        .service-card p {
-          color: #64748b;
-          line-height: 1.8;
-          margin-bottom: 24px;
-        }
+  font-weight: 800;
 
-        .service-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          text-decoration: none;
-          color: #009b55;
-          font-weight: 700;
-          transition: all 0.3s ease;
-        }
+  letter-spacing: .15em;
 
-        .service-link:hover {
-          color: #007c45;
-          transform: translateX(5px);
-        }
+  margin-bottom: 22px;
+}
 
-        .card-number {
-          position: absolute;
-          top: 15px;
-          right: 20px;
-          font-size: 3rem;
-          font-weight: 800;
-          color: rgba(15, 23, 42, 0.05);
-          user-select: none;
-        }
+.section-title {
+  font-size: clamp(2.8rem,5vw,4.5rem);
 
-        .bg-orb {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(120px);
-          opacity: 0.25;
-          pointer-events: none;
-        }
+  font-weight: 900;
 
-        .orb-left {
-          width: 350px;
-          height: 350px;
-          background: #19c37d;
-          top: -120px;
-          left: -120px;
-        }
+  color: #ffffff;
 
-        .orb-right {
-          width: 450px;
-          height: 450px;
-          background: #009b55;
-          bottom: -180px;
-          right: -180px;
-        }
+  margin-bottom: 20px;
 
-        @media (max-width: 768px) {
-          .services-section {
-            padding: 70px 15px;
-          }
+  line-height: 1.1;
+}
 
-          .services-grid {
-            grid-template-columns: 1fr;
-          }
+.section-title span {
+  color: #bbf7d0;
+}
 
-          .service-card {
-            padding: 25px;
-          }
+.section-description {
+  color: #d1fae5;
 
-          .section-description {
-            font-size: 1rem;
-          }
-        }
+  font-size: 1.15rem;
+
+  line-height: 1.9;
+
+  font-weight: 500;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit,minmax(320px,1fr));
+
+  gap: 30px;
+}
+
+.service-card {
+  position: relative;
+
+  background: rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(12px);
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  border-radius: 28px;
+
+  padding: 35px;
+
+  overflow: hidden;
+
+  transition: all .35s ease;
+
+  height: 100%;
+}
+
+.service-card:hover {
+  transform: translateY(-8px);
+
+  border-color: rgba(255,255,255,.25);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,.20);
+}
+
+.card-glow {
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,.08),
+    transparent
+  );
+
+  opacity: 0;
+
+  transition: .35s ease;
+}
+
+.service-card:hover .card-glow {
+  opacity: 1;
+}
+
+.icon-wrapper {
+  width: 85px;
+  height: 85px;
+
+  border-radius: 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-bottom: 25px;
+
+  background: #ffffff;
+
+  color: #009b55;
+
+  box-shadow:
+    0 12px 30px rgba(0,0,0,.18);
+}
+
+.service-card h3 {
+  color: #ffffff;
+
+  font-size: 1.45rem;
+
+  font-weight: 800;
+
+  margin-bottom: 16px;
+
+  line-height: 1.3;
+}
+
+.service-card p {
+  color: #d1fae5;
+
+  font-size: 1rem;
+
+  line-height: 1.85;
+
+  margin-bottom: 24px;
+}
+
+.service-link {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-weight: 700;
+
+  transition: .3s ease;
+}
+
+.service-link:hover {
+  color: #bbf7d0;
+
+  transform: translateX(5px);
+}
+
+.card-number {
+  position: absolute;
+
+  top: 15px;
+  right: 20px;
+
+  font-size: 2.5rem;
+
+  font-weight: 900;
+
+  color: rgba(255,255,255,0.08);
+}
+
+.bg-orb {
+  position: absolute;
+
+  border-radius: 50%;
+
+  filter: blur(120px);
+
+  opacity: .18;
+}
+
+.orb-left {
+  width: 350px;
+  height: 350px;
+
+  background: #34d399;
+
+  left: -120px;
+  top: 120px;
+}
+
+.orb-right {
+  width: 400px;
+  height: 400px;
+
+  background: #bbf7d0;
+
+  right: -150px;
+  bottom: 40px;
+}
+
+@media (max-width: 768px) {
+
+  .services-section {
+    padding: 80px 15px;
+  }
+
+  .section-title {
+    font-size: 2.5rem;
+  }
+
+  .section-description {
+    font-size: 1rem;
+  }
+
+  .service-card {
+    padding: 25px;
+  }
+
+  .icon-wrapper {
+    width: 75px;
+    height: 75px;
+  }
+}
       `}</style>
     </>
   );
