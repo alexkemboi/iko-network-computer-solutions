@@ -120,7 +120,7 @@ const OnlineServices = () => {
             </span>
 
             <h2 className="section-title">
-              Online <span>Services</span>
+               <span>Online Services</span>
             </h2>
 
             <p className="section-description">

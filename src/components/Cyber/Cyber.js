@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+import OnlineServices from "../OnlineServices/OnlineServices"
 import {
   FaPrint,
   FaCopy,
@@ -85,7 +86,7 @@ const Cyber = () => {
             <span className="section-badge">DIGITAL DOCUMENT SOLUTIONS</span>
 
             <h2 className="section-title">
-              Cyber <span>Services</span>
+               <span>Cyber Services</span>
             </h2>
 
             <p className="section-description">
@@ -150,11 +151,12 @@ const Cyber = () => {
               );
             })}
           </motion.div>
+            
         </div>
-
         {/* Bottom Border */}
         <div className="section-border bottom-border"></div>
       </section>
+        <OnlineServices/>
 
       <style>{`
         .cyber-section {

@@ -1,56 +1,102 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+
 import {
-  FaGlobe,
-  FaMobileAlt,
+  FaLaptopCode,
   FaCode,
-  FaArrowRight,
+  FaReact,
+  FaDatabase,
+  FaServer,
+  FaCloudUploadAlt,
   FaCheckCircle,
+  FaArrowRight,
 } from "react-icons/fa";
 
-const SoftwareComponent = () => {
+const TrainingComponent = () => {
   const shouldReduceMotion = useReducedMotion();
 
-  const developmentServices = [
+  const trainings = [
     {
-      name: "Web Development",
+      title: "Website Development Training",
+      icon: FaReact,
       description:
-        "Create modern, fast, and responsive websites tailored to your business needs. We develop scalable front-end and back-end solutions using industry-leading technologies.",
-      icon: FaGlobe,
+        "Learn modern frontend and full stack web development using industry-standard technologies and real-world projects.",
       features: [
-        "Responsive & Mobile-First Design",
-        "Custom Web Applications",
-        "API Development & Integration",
-        "Database Design & Management",
-        "Performance Optimization",
+        "HTML, CSS & JavaScript",
+        "Responsive UI Design",
+        "React Frontend Development",
+        "REST APIs & Fetch",
+        "Git & GitHub Workflow",
       ],
     },
 
     {
-      name: "Mobile Development",
+      title: "Full Stack Software Development",
+      icon: FaLaptopCode,
       description:
-        "Build intuitive and high-performance mobile applications for Android and iOS with seamless user experiences and scalable architecture.",
-      icon: FaMobileAlt,
+        "Master full stack application development from frontend interfaces to backend APIs and databases.",
       features: [
-        "Native Android Development",
-        "Native iOS Development",
-        "Cross-Platform Applications",
-        "UI/UX Design & Prototyping",
-        "App Testing & Deployment",
+        "React & Component Architecture",
+        "Node.js & Express APIs",
+        "Authentication & JWT",
+        "MySQL Database Design",
+        "Full Stack Integration",
       ],
     },
 
     {
-      name: "Software Development",
+      title: "Backend & API Engineering",
+      icon: FaServer,
       description:
-        "Transform business operations with enterprise-grade software systems, desktop applications, and automation platforms.",
+        "Build scalable backend systems, APIs and enterprise-grade server applications using modern development practices.",
+      features: [
+        "REST API Development",
+        "CRUD Operations",
+        "Middleware & Validation",
+        "Error Handling",
+        "API Security Best Practices",
+      ],
+    },
+
+    {
+      title: "Database & System Design",
+      icon: FaDatabase,
+      description:
+        "Understand database architecture, system scalability and clean software engineering principles.",
+      features: [
+        "SQL & Relational Databases",
+        "Schema Relationships",
+        "System Design Fundamentals",
+        "Query Optimization",
+        "Software Architecture",
+      ],
+    },
+
+    {
+      title: "Deployment & DevOps Training",
+      icon: FaCloudUploadAlt,
+      description:
+        "Learn how to deploy, manage and maintain modern web applications in production environments.",
+      features: [
+        "Frontend & Backend Hosting",
+        "CI/CD Fundamentals",
+        "Environment Variables",
+        "Docker & VPS Basics",
+        "Domain & DNS Configuration",
+      ],
+    },
+
+    {
+      title: "Software Development Lifecycle",
       icon: FaCode,
+      description:
+        "Understand the complete software development lifecycle from planning and design to deployment and maintenance.",
       features: [
-        "Custom Software Solutions",
-        "Enterprise System Development",
-        "Desktop Applications",
-        "Process Automation Tools",
-        "Maintenance & Support",
+        "Planning & Analysis",
+        "System Design",
+        "Testing & QA",
+        "Deployment Strategies",
+        "Maintenance & Monitoring",
       ],
     },
   ];
@@ -83,12 +129,12 @@ const SoftwareComponent = () => {
 
   return (
     <>
-      <section className="software-section">
+      <section className="training-section">
         {/* BACKGROUND GLOW */}
         <div className="bg-glow glow-left"></div>
         <div className="bg-glow glow-right"></div>
 
-        <div className="software-container">
+        <div className="training-container">
           {/* HEADER */}
           <motion.div
             className="section-header"
@@ -104,11 +150,12 @@ const SoftwareComponent = () => {
             transition={{ duration: 0.7 }}
           >
             <span className="section-badge">
-              DIGITAL TRANSFORMATION SOLUTIONS
+              PROFESSIONAL TRAINING PROGRAMS
             </span>
 
             <h2 className="section-title">
-              Software <span>Development</span>
+              Website & Software
+              <span> Development Training</span>
             </h2>
 
             <div className="title-divider">
@@ -118,28 +165,27 @@ const SoftwareComponent = () => {
             </div>
 
             <p className="section-description">
-              We build innovative digital products and enterprise-grade
-              software solutions that help organizations streamline
-              operations, improve efficiency and accelerate business
-              growth.
+              Practical, industry-focused training programs designed
+              to equip students and professionals with modern software
+              engineering and full stack development skills.
             </p>
           </motion.div>
 
           {/* CARDS */}
           <motion.div
-            className="software-grid"
+            className="training-grid"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
           >
-            {developmentServices.map((service, index) => {
-              const Icon = service.icon;
+            {trainings.map((training, index) => {
+              const Icon = training.icon;
 
               return (
                 <motion.article
-                  key={service.name}
-                  className="software-card"
+                  key={training.title}
+                  className="training-card"
                   variants={cardVariants}
                   whileHover={
                     shouldReduceMotion
@@ -150,7 +196,7 @@ const SoftwareComponent = () => {
                         }
                   }
                 >
-                  {/* CARD NUMBER */}
+                  {/* NUMBER */}
                   <span className="card-number">
                     {(index + 1).toString().padStart(2, "0")}
                   </span>
@@ -171,16 +217,16 @@ const SoftwareComponent = () => {
                   </motion.div>
 
                   {/* TITLE */}
-                  <h3>{service.name}</h3>
+                  <h3>{training.title}</h3>
 
                   <div className="mini-line"></div>
 
                   {/* DESCRIPTION */}
-                  <p>{service.description}</p>
+                  <p>{training.description}</p>
 
                   {/* FEATURES */}
                   <ul className="feature-list">
-                    {service.features.map((feature, idx) => (
+                    {training.features.map((feature, idx) => (
                       <li key={idx}>
                         <FaCheckCircle />
                         {feature}
@@ -188,9 +234,9 @@ const SoftwareComponent = () => {
                     ))}
                   </ul>
 
-                  {/* BUTTON */}
+                  {/* CTA */}
                   <a href="/" className="learn-more">
-                    Learn More
+                    Enroll Now
                     <FaArrowRight />
                   </a>
                 </motion.article>
@@ -201,7 +247,7 @@ const SoftwareComponent = () => {
       </section>
 
       <style>{`
-        .software-section {
+        .training-section {
           position: relative;
           overflow: hidden;
           padding: 110px 24px;
@@ -213,7 +259,7 @@ const SoftwareComponent = () => {
           );
         }
 
-        .software-container {
+        .training-container {
           max-width: 1350px;
           margin: 0 auto;
           position: relative;
@@ -299,7 +345,7 @@ const SoftwareComponent = () => {
           margin: auto;
         }
 
-        .software-grid {
+        .training-grid {
           display: grid;
 
           grid-template-columns: repeat(
@@ -310,7 +356,7 @@ const SoftwareComponent = () => {
           gap: 32px;
         }
 
-        .software-card {
+        .training-card {
           position: relative;
           overflow: hidden;
           padding: 42px;
@@ -325,7 +371,7 @@ const SoftwareComponent = () => {
             0 0 35px rgba(34,197,94,0.05);
         }
 
-        .software-card:hover {
+        .training-card:hover {
           border-color: rgba(34,197,94,0.4);
 
           box-shadow:
@@ -355,7 +401,7 @@ const SoftwareComponent = () => {
             0 15px 35px rgba(34,197,94,0.35);
         }
 
-        .software-card h3 {
+        .training-card h3 {
           font-size: 2rem;
           font-weight: 800;
           color: #ffffff;
@@ -376,7 +422,7 @@ const SoftwareComponent = () => {
           margin-bottom: 24px;
         }
 
-        .software-card p {
+        .training-card p {
           color: #cbd5e1;
           line-height: 1.9;
           margin-bottom: 28px;
@@ -471,18 +517,18 @@ const SoftwareComponent = () => {
         }
 
         @media (max-width: 992px) {
-          .software-grid {
+          .training-grid {
             grid-template-columns: 1fr;
           }
         }
 
         @media (max-width: 768px) {
 
-          .software-section {
+          .training-section {
             padding: 90px 16px;
           }
 
-          .software-card {
+          .training-card {
             padding: 30px;
           }
 
@@ -494,7 +540,7 @@ const SoftwareComponent = () => {
             font-size: 1rem;
           }
 
-          .software-card h3 {
+          .training-card h3 {
             font-size: 1.6rem;
           }
 
@@ -511,4 +557,4 @@ const SoftwareComponent = () => {
   );
 };
 
-export default SoftwareComponent;
+export default TrainingComponent;

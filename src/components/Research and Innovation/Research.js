@@ -1,56 +1,87 @@
 import React from "react";
 import { motion, useReducedMotion } from "framer-motion";
+
 import {
-  FaGlobe,
-  FaMobileAlt,
-  FaCode,
-  FaArrowRight,
+  FaLightbulb,
+  FaFlask,
+  FaBrain,
+  FaChartLine,
+  FaRocket,
   FaCheckCircle,
+  FaArrowRight,
 } from "react-icons/fa";
 
-const SoftwareComponent = () => {
+const ResearchInnovationComponent = () => {
   const shouldReduceMotion = useReducedMotion();
 
-  const developmentServices = [
+  const researchAreas = [
     {
-      name: "Web Development",
+      title: "Technology Research",
+      icon: FaFlask,
       description:
-        "Create modern, fast, and responsive websites tailored to your business needs. We develop scalable front-end and back-end solutions using industry-leading technologies.",
-      icon: FaGlobe,
+        "We conduct advanced technology research to help organizations discover modern digital opportunities and solutions.",
       features: [
-        "Responsive & Mobile-First Design",
-        "Custom Web Applications",
-        "API Development & Integration",
-        "Database Design & Management",
-        "Performance Optimization",
+        "Emerging Technology Analysis",
+        "Digital Transformation Research",
+        "Software Feasibility Studies",
+        "Technology Evaluation",
+        "Innovation Strategy",
       ],
     },
 
     {
-      name: "Mobile Development",
+      title: "Innovation & Product Design",
+      icon: FaLightbulb,
       description:
-        "Build intuitive and high-performance mobile applications for Android and iOS with seamless user experiences and scalable architecture.",
-      icon: FaMobileAlt,
+        "Transform ideas into scalable digital products through innovation-driven design and strategic planning.",
       features: [
-        "Native Android Development",
-        "Native iOS Development",
-        "Cross-Platform Applications",
-        "UI/UX Design & Prototyping",
-        "App Testing & Deployment",
+        "Product Ideation",
+        "Prototype Development",
+        "User Experience Research",
+        "Solution Architecture",
+        "Innovation Consulting",
       ],
     },
 
     {
-      name: "Software Development",
+      title: "AI & Intelligent Systems",
+      icon: FaBrain,
       description:
-        "Transform business operations with enterprise-grade software systems, desktop applications, and automation platforms.",
-      icon: FaCode,
+        "Research and development of intelligent systems, automation solutions and AI-powered digital platforms.",
       features: [
-        "Custom Software Solutions",
-        "Enterprise System Development",
-        "Desktop Applications",
-        "Process Automation Tools",
-        "Maintenance & Support",
+        "AI-Powered Applications",
+        "Automation Solutions",
+        "Predictive Analytics",
+        "Smart System Integration",
+        "Machine Learning Research",
+      ],
+    },
+
+    {
+      title: "Business Intelligence",
+      icon: FaChartLine,
+      description:
+        "Data-driven research and analytics solutions to support business growth and strategic decision making.",
+      features: [
+        "Data Analysis & Insights",
+        "Performance Reporting",
+        "Business Forecasting",
+        "Research Documentation",
+        "Strategic Recommendations",
+      ],
+    },
+
+    {
+      title: "Startup & Innovation Support",
+      icon: FaRocket,
+      description:
+        "Helping startups and enterprises build innovative digital solutions from concept to scalable deployment.",
+      features: [
+        "Startup Technology Guidance",
+        "MVP Development",
+        "Innovation Roadmaps",
+        "Technical Mentorship",
+        "Scalable Product Planning",
       ],
     },
   ];
@@ -83,12 +114,12 @@ const SoftwareComponent = () => {
 
   return (
     <>
-      <section className="software-section">
+      <section className="research-section">
         {/* BACKGROUND GLOW */}
         <div className="bg-glow glow-left"></div>
         <div className="bg-glow glow-right"></div>
 
-        <div className="software-container">
+        <div className="research-container">
           {/* HEADER */}
           <motion.div
             className="section-header"
@@ -104,11 +135,12 @@ const SoftwareComponent = () => {
             transition={{ duration: 0.7 }}
           >
             <span className="section-badge">
-              DIGITAL TRANSFORMATION SOLUTIONS
+              RESEARCH & DIGITAL INNOVATION
             </span>
 
             <h2 className="section-title">
-              Software <span>Development</span>
+              Research &
+              <span> Innovations</span>
             </h2>
 
             <div className="title-divider">
@@ -118,28 +150,28 @@ const SoftwareComponent = () => {
             </div>
 
             <p className="section-description">
-              We build innovative digital products and enterprise-grade
-              software solutions that help organizations streamline
-              operations, improve efficiency and accelerate business
-              growth.
+              We help companies conduct extensive research and
+              innovations to build scalable, future-ready digital
+              solutions that drive growth, efficiency and
+              competitive advantage.
             </p>
           </motion.div>
 
           {/* CARDS */}
           <motion.div
-            className="software-grid"
+            className="research-grid"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
           >
-            {developmentServices.map((service, index) => {
-              const Icon = service.icon;
+            {researchAreas.map((area, index) => {
+              const Icon = area.icon;
 
               return (
                 <motion.article
-                  key={service.name}
-                  className="software-card"
+                  key={area.title}
+                  className="research-card"
                   variants={cardVariants}
                   whileHover={
                     shouldReduceMotion
@@ -150,7 +182,7 @@ const SoftwareComponent = () => {
                         }
                   }
                 >
-                  {/* CARD NUMBER */}
+                  {/* NUMBER */}
                   <span className="card-number">
                     {(index + 1).toString().padStart(2, "0")}
                   </span>
@@ -171,16 +203,16 @@ const SoftwareComponent = () => {
                   </motion.div>
 
                   {/* TITLE */}
-                  <h3>{service.name}</h3>
+                  <h3>{area.title}</h3>
 
                   <div className="mini-line"></div>
 
                   {/* DESCRIPTION */}
-                  <p>{service.description}</p>
+                  <p>{area.description}</p>
 
                   {/* FEATURES */}
                   <ul className="feature-list">
-                    {service.features.map((feature, idx) => (
+                    {area.features.map((feature, idx) => (
                       <li key={idx}>
                         <FaCheckCircle />
                         {feature}
@@ -188,9 +220,9 @@ const SoftwareComponent = () => {
                     ))}
                   </ul>
 
-                  {/* BUTTON */}
+                  {/* CTA */}
                   <a href="/" className="learn-more">
-                    Learn More
+                    Explore More
                     <FaArrowRight />
                   </a>
                 </motion.article>
@@ -201,7 +233,7 @@ const SoftwareComponent = () => {
       </section>
 
       <style>{`
-        .software-section {
+        .research-section {
           position: relative;
           overflow: hidden;
           padding: 110px 24px;
@@ -213,7 +245,7 @@ const SoftwareComponent = () => {
           );
         }
 
-        .software-container {
+        .research-container {
           max-width: 1350px;
           margin: 0 auto;
           position: relative;
@@ -299,7 +331,7 @@ const SoftwareComponent = () => {
           margin: auto;
         }
 
-        .software-grid {
+        .research-grid {
           display: grid;
 
           grid-template-columns: repeat(
@@ -310,7 +342,7 @@ const SoftwareComponent = () => {
           gap: 32px;
         }
 
-        .software-card {
+        .research-card {
           position: relative;
           overflow: hidden;
           padding: 42px;
@@ -325,7 +357,7 @@ const SoftwareComponent = () => {
             0 0 35px rgba(34,197,94,0.05);
         }
 
-        .software-card:hover {
+        .research-card:hover {
           border-color: rgba(34,197,94,0.4);
 
           box-shadow:
@@ -355,7 +387,7 @@ const SoftwareComponent = () => {
             0 15px 35px rgba(34,197,94,0.35);
         }
 
-        .software-card h3 {
+        .research-card h3 {
           font-size: 2rem;
           font-weight: 800;
           color: #ffffff;
@@ -376,7 +408,7 @@ const SoftwareComponent = () => {
           margin-bottom: 24px;
         }
 
-        .software-card p {
+        .research-card p {
           color: #cbd5e1;
           line-height: 1.9;
           margin-bottom: 28px;
@@ -471,18 +503,18 @@ const SoftwareComponent = () => {
         }
 
         @media (max-width: 992px) {
-          .software-grid {
+          .research-grid {
             grid-template-columns: 1fr;
           }
         }
 
         @media (max-width: 768px) {
 
-          .software-section {
+          .research-section {
             padding: 90px 16px;
           }
 
-          .software-card {
+          .research-card {
             padding: 30px;
           }
 
@@ -494,7 +526,7 @@ const SoftwareComponent = () => {
             font-size: 1rem;
           }
 
-          .software-card h3 {
+          .research-card h3 {
             font-size: 1.6rem;
           }
 
@@ -511,4 +543,4 @@ const SoftwareComponent = () => {
   );
 };
 
-export default SoftwareComponent;
+export default ResearchInnovationComponent;

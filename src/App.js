@@ -7,16 +7,19 @@ import SoftwareComponent from './components/SoftwareComponent/SoftwareComponent'
 import ProductListComponent from './components/ProductListingComponent/ProductListingComponent';
 import ServiceListComponent from './components/ServiceListingComponent/ServiceListingComponent';
 import OnlineServices from "./components/OnlineServices/OnlineServices"
+import TrainingComponent from "./components/Training/Training"
+import ResearchComponent from "./components/Research and Innovation/Research"
 function App() {
   return (
     <div>
           <NavbarComponent/>
           <Home/>
-          <ProductListComponent/>
-          <OnlineServices/>
+          <SoftwareComponent/>
+          <ProductListComponent/>         
           <ServiceListComponent/>
           <Cyber/>
-          <SoftwareComponent/>
+          <TrainingComponent/>
+          <ResearchComponent/>
           <Footer/>
     </div>
   );
