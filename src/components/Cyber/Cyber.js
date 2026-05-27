@@ -8,7 +8,7 @@ import {
   FaBook,
   FaArrowRight,
 } from "react-icons/fa";
-import headerImage from "../../images/header.jpg";
+// import headerImage from "../../images/header.png";
 
 const Cyber = () => {
   const shouldReduceMotion = useReducedMotion();
@@ -67,9 +67,9 @@ const Cyber = () => {
     <>
       <section
         className="cyber-section"
-        style={{
-          backgroundImage: `url(${headerImage})`,
-        }}
+        // style={{
+        //   backgroundImage: `url(${headerImage})`,
+        // }}
       >
         {/* Top Border */}
         <div className="section-border top-border"></div>
@@ -171,10 +171,11 @@ const Cyber = () => {
         .overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(
-            135deg,
-            rgba(15, 23, 42, 0.92),
-            rgba(15, 23, 42, 0.85)
+               background: linear-gradient(
+            180deg,
+            #0f172a 0%,
+            #111827 50%,
+            #0f172a 100%
           );
         }
 

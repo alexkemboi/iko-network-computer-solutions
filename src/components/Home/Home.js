@@ -10,12 +10,10 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 
-import backgroundImage from "../../images/header.jpg";
-
 import slide1 from "../../images/banner.png";
-import slide2 from "../../images/header.jpg";
+import slide2 from "../../images/header.png";
 import slide3 from "../../images/banner.png";
-import slide4 from "../../images/header.jpg";
+import slide4 from "../../images/header.png";
 import slide5 from "../../images/banner.png";
 
 function Home() {
@@ -80,9 +78,7 @@ function Home() {
     <>
       <section
         className="hero-section"
-        style={{
-          backgroundImage: `url(${backgroundImage})`,
-        }}
+      
       >
         <div className="hero-overlay"></div>
 
@@ -119,7 +115,10 @@ function Home() {
                   </span>
 
                   <span>
-                    IKONEX SYSTEMS
+                 {
+                    slides[currentSlide]
+                      .title
+                  }
                   </span>
                 </div>
 
@@ -215,7 +214,12 @@ function Home() {
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-
+            background: linear-gradient(
+            180deg,
+            #0f172a 0%,
+            #111827 50%,
+            #0f172a 100%
+          );
             padding:
               130px 20px
               60px;

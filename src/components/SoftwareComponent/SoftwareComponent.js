@@ -205,11 +205,11 @@ const SoftwareComponent = () => {
           position: relative;
           overflow: hidden;
           padding: 110px 24px;
-          background: linear-gradient(
+         background: linear-gradient(
             180deg,
-            #020617 0%,
-            #0f172a 50%,
-            #020617 100%
+            #0f172a 0%,
+            #111827 50%,
+            #0f172a 100%
           );
         }
 

@@ -117,8 +117,8 @@ const ProductListComponent = () => {
     <>
       <section className="software-products-section">
         {/* GLOW EFFECTS */}
-        <div className="bg-glow glow-left"></div>
-        <div className="bg-glow glow-right"></div>
+        <div className="bg-glows glow-lefts"></div>
+        <div className="bg-glows glow-rights"></div>
 
         <div className="container">
           {/* HEADER */}
@@ -220,12 +220,12 @@ const ProductListComponent = () => {
 
             padding: 120px 24px;
 
-            background: linear-gradient(
-              180deg,
-              #02130a 0%,
-              #052e16 45%,
-              #02130a 100%
-            );
+               background: linear-gradient(
+            180deg,
+            #0f172a 0%,
+            #111827 50%,
+            #0f172a 100%
+          );
           }
 
           .container {
@@ -248,25 +248,25 @@ const ProductListComponent = () => {
             opacity: 0.2;
           }
 
-          .glow-left {
-            width: 340px;
-            height: 340px;
+          // .glow-left {
+          //   width: 340px;
+          //   height: 340px;
 
-            background: #22c55e;
+          //   background: #22c55e;
 
-            top: 120px;
-            left: -120px;
-          }
+          //   top: 120px;
+          //   left: -120px;
+          // }
 
-          .glow-right {
-            width: 420px;
-            height: 420px;
+          // .glow-right {
+          //   width: 420px;
+          //   height: 420px;
 
-            background: #16a34a;
+          //   background: #16a34a;
 
-            bottom: -180px;
-            right: -120px;
-          }
+          //   bottom: -180px;
+          //   right: -120px;
+          // }
 
           .section-header {
             text-align: center;
