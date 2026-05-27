@@ -1,0 +1,20 @@
+- name: Deploy via SSH
+  uses: appleboy/ssh-action@v1.0.3
+  with:
+    host: ${{ secrets.SERVER_HOST }}
+    username: ${{ secrets.SERVER_USER }}
+    key: ${{ secrets.SERVER_SSH_KEY }}
+    script: |
+      cd ~/ikonexsystemswebsites/iko-network-computer-solutions
+
+      git pull origin main
+
+      npm install
+
+      npm run build
+
+      sudo rm -rf /var/www/ikonexsystems/*
+
+      sudo cp -r build/* /var/www/ikonexsystems/
+
+      sudo systemctl reload nginx
