@@ -336,7 +336,7 @@ const NavbarComponent = () => {
           <div className="nav-actions">
             <ThemeToggle />
 
-            <a href="/" className="login-btn">
+            <a href="#/login" className="login-btn">
               <FaSignInAlt aria-hidden="true" />
               Login
             </a>
@@ -456,7 +456,7 @@ const NavbarComponent = () => {
           </li>
         </ul>
 
-        <a href="/" className="mobile-login-btn" onClick={closeMenu}>
+        <a href="#/login" className="mobile-login-btn" onClick={closeMenu}>
           <FaSignInAlt aria-hidden="true" />
           Login
         </a>

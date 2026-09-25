@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import './App.css';
 import Cyber from "./components/Cyber/Cyber"
 import NavbarComponent from "./components/Navbar/Navbar";
@@ -11,6 +11,21 @@ import TrainingComponent from "./components/Training/Training"
 import ResearchComponent from "./components/Research and Innovation/Research"
 import Contact from "./components/Contact/Contact";
 import { OrderProvider } from "./commerce/OrderContext";
+import { isPortalHash } from "./portal/useHashRoute";
+
+// The business portal (login, sign-up, dashboards) lives behind #/login, #/signup
+// and #/app/... and is only downloaded when someone opens it.
+const Portal = lazy(() => import("./portal/Portal"));
+
+const usePortalRoute = () => {
+  const [inPortal, setInPortal] = useState(isPortalHash);
+  useEffect(() => {
+    const onHash = () => setInPortal(isPortalHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return inPortal;
+};
 
 // One shared, rAF-throttled listener that feeds the cursor position to
 // whichever card is hovered (used by the soft spotlight effect in theme.css).
@@ -37,7 +52,7 @@ const useCardSpotlight = () => {
   }, []);
 };
 
-function App() {
+function Website() {
   useCardSpotlight();
 
   return (
@@ -58,6 +73,18 @@ function App() {
     </div>
     </OrderProvider>
   );
+}
+
+function App() {
+  const inPortal = usePortalRoute();
+  if (inPortal) {
+    return (
+      <Suspense fallback={<div className="px-splash" role="status">Loading…</div>}>
+        <Portal />
+      </Suspense>
+    );
+  }
+  return <Website />;
 }
 
 export default App;

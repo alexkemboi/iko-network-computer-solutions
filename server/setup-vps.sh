@@ -135,31 +135,51 @@ location /api/ {
 NGINX
 green "Wrote $SNIPPET"
 
-SITE_FILES="$(grep -rlE "server_name[^;]*\b${DOMAIN//./\\.}\b" /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null | sort -u || true)"
+WEB_ROOT="${WEB_ROOT:-/var/www/ikonexsystems}"
+NGINX_PLACES="/etc/nginx/sites-enabled /etc/nginx/conf.d /etc/nginx/nginx.conf"
+
+# -R follows the symlinks in sites-enabled (plain -r silently skips them)
+SITE_FILES="$(grep -RlE "server_name[^;]*${DOMAIN//./\\.}" $NGINX_PLACES 2>/dev/null | sort -u || true)"
+MATCH_BY="server_name"
 if [ -z "$SITE_FILES" ]; then
-  red "Couldn't find an nginx site with server_name $DOMAIN."
-  echo "   Add this line inside its server { } block (next to server_name) and reload nginx:"
-  echo "   include snippets/ikonex-api.conf;"
+  # Fall back to the site that serves the website folder the deploy copies to
+  SITE_FILES="$(grep -RlF "root $WEB_ROOT" $NGINX_PLACES 2>/dev/null | sort -u || true)"
+  MATCH_BY="root"
+fi
+if [ -z "$SITE_FILES" ]; then
+  red "Couldn't find the nginx site for $DOMAIN (by server_name or by root $WEB_ROOT)."
+  echo "   Your enabled nginx sites are:"
+  ls -l /etc/nginx/sites-enabled/ 2>/dev/null || true
+  echo "   Send me the output of:  sudo nginx -T | grep -nE 'server_name|root|listen'"
   exit 1
 fi
+echo "nginx site(s) found by $MATCH_BY: $SITE_FILES"
 
+declare -A SEEN=()
 for f in $SITE_FILES; do
   real="$(readlink -f "$f")"
+  [ -n "${SEEN[$real]:-}" ] && continue
+  SEEN[$real]=1
   if grep -q "snippets/ikonex-api.conf" "$real"; then
     green "nginx already includes the API in $real"
     continue
   fi
-  cp "$real" "$real.bak.$(date +%Y%m%d%H%M%S)"
-  # Add the include right after every server_name line for the domain
-  python3 - "$real" "$DOMAIN" <<'PY'
+  # Keep backups OUTSIDE sites-enabled (nginx would load a copy left there)
+  mkdir -p /etc/nginx/ikonex-backups
+  cp "$real" "/etc/nginx/ikonex-backups/$(basename "$real").$(date +%Y%m%d%H%M%S)"
+  python3 - "$real" "$DOMAIN" "$WEB_ROOT" "$MATCH_BY" <<'PY'
 import re, sys
-path, domain = sys.argv[1], sys.argv[2]
+path, domain, web_root, match_by = sys.argv[1:5]
 src = open(path).read()
-pat = re.compile(r"^([ \t]*)(server_name[^;]*\b" + re.escape(domain) + r"\b[^;]*;)[ \t]*$", re.M)
-out = pat.sub(lambda m: f"{m.group(1)}{m.group(2)}\n{m.group(1)}include snippets/ikonex-api.conf;", src)
+if match_by == "server_name":
+    pat = re.compile(r"^([ \t]*)(server_name[^;]*" + re.escape(domain) + r"[^;]*;)[^\n]*$", re.M)
+else:
+    pat = re.compile(r"^([ \t]*)(root[ \t]+" + re.escape(web_root) + r"[^;]*;)[^\n]*$", re.M)
+out, n = pat.subn(lambda m: f"{m.group(0)}\n{m.group(1)}include snippets/ikonex-api.conf;", src)
 open(path, "w").write(out)
+print(f"   inserted in {n} server block(s)")
 PY
-  green "Added include to $real (backup saved next to it)"
+  green "Added include to $real (backup in /etc/nginx/ikonex-backups/)"
 done
 
 if nginx -t 2>/dev/null; then
@@ -167,8 +187,8 @@ if nginx -t 2>/dev/null; then
   green "nginx reloaded"
 else
   red "nginx config test failed — restoring backups."
-  for f in $SITE_FILES; do
-    real="$(readlink -f "$f")"; last="$(ls -t "$real".bak.* 2>/dev/null | head -1 || true)"
+  for real in "${!SEEN[@]}"; do
+    last="$(ls -t /etc/nginx/ikonex-backups/"$(basename "$real")".* 2>/dev/null | head -1 || true)"
     [ -n "$last" ] && cp "$last" "$real"
   done
   nginx -t; exit 1

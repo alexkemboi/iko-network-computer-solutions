@@ -17,6 +17,7 @@ import {
   waitForPayment,
 } from "./mpesa";
 import {
+  API_BASE,
   PAYMENTS_ENABLED,
   BUSINESS_EMAIL,
   BUSINESS_PHONE_DISPLAY,
@@ -66,14 +67,39 @@ const CheckoutModal = ({ item, onClose, onEnquire }) => {
   const hasFixedPrice = item && typeof item.price === "number" && item.price > 0;
 
   // Reset whenever a new item is opened
+  const itemKey = item ? `${item.section || ""}|${item.name}` : "";
   useEffect(() => {
-    if (!item) return;
-    setForm({ ...initialForm, amount: hasFixedPrice ? String(item.price) : "" });
+    if (!itemKey) return;
+    setForm({ ...initialForm });
     setErrors({});
     setStage("form");
     setMessage("");
     setReceipt(null);
-  }, [item, hasFixedPrice]);
+  }, [itemKey]);
+
+  // Fixed price (from the item, or loaded from the portal catalogue a moment later)
+  const fixedPrice = hasFixedPrice ? String(item.price) : "";
+  useEffect(() => {
+    if (itemKey) setForm((f) => ({ ...f, amount: fixedPrice || f.amount }));
+  }, [itemKey, fixedPrice]);
+
+  // Signed in to the portal? Pre-fill name and M-Pesa number (never overwrite typing).
+  useEffect(() => {
+    if (!itemKey || !PAYMENTS_ENABLED) return undefined;
+    let alive = true;
+    fetch(`${API_BASE}/api/auth/me`, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const u = d && d.user;
+        if (!alive || !u) return;
+        const local = u.phone && /^254\d{9}$/.test(u.phone) ? `0${u.phone.slice(3)}` : "";
+        setForm((f) => ({ ...f, name: f.name || u.fullName || "", phone: f.phone || local }));
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [itemKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Stop polling when the dialog closes
   useEffect(() => {

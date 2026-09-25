@@ -172,3 +172,80 @@ Every prompt, callback and status check is appended to `server/data/payments.jso
 - Payment results are only accepted on the secret callback URL, and only for prompts this server sent. A successful payment is also checked against the amount that was requested.
 - The amount comes from the customer's browser: either an item's `price` (optional field in the site data) or the amount they type as quoted. Always confirm the amount paid matches the agreed price before fulfilling an order.
 - The API listens on `127.0.0.1` only, so it's reachable just through nginx.
+
+---
+
+# Business portal: login, dashboards, orders, payments, SMS and payouts
+
+The website now has a portal at **`/#/login`**. The **Login** button in the navbar opens it.
+
+- **Sign up and log in.** The **first account created becomes the Administrator**. Later sign-ups are Customers, who see only their own orders and payments.
+- **Menus by role:**
+
+  | Menu | Who sees it |
+  |---|---|
+  | Overview, Orders, Payments | Everyone (customers see only their own) |
+  | Enquiries (contact form), Bulk SMS, Products, Services | Admin + Staff |
+  | Bulk Payments, Users, Settings | Admin only |
+
+- **Recorded automatically.** Every website checkout creates an **Order**. Every M-Pesa prompt creates a **Payment**. When Safaricom calls back, the payment gets its receipt and the order becomes *Paid*, *Cancelled* or *Failed*.
+- **Fixed prices.** If you set a price on a product or service, checkout charges exactly that amount. The server enforces it too. Items without a price keep the "amount quoted to you" box.
+
+## 1. SQL Server database (`localhost\SQLEXPRESS`, database `ikonex`)
+
+Do this once on the PC that runs SQL Server Express:
+
+1. **SQL Server Configuration Manager** → *SQL Server Network Configuration* → *Protocols for SQLEXPRESS* → enable **TCP/IP**.
+2. In the same tool, under *SQL Server Services*:
+   - Start **SQL Server Browser** and set it to *Automatic*. It lets the app find the named instance `SQLEXPRESS`.
+   - Restart **SQL Server (SQLEXPRESS)**.
+3. Open `server/db/create-login.sql` in **SSMS**, connected with Windows Authentication:
+   - **Change the password** in it.
+   - Run it. This turns on SQL logins, creates the `ikonex` database and creates the `ikonex_app` login.
+   - Restart **SQL Server (SQLEXPRESS)** again.
+4. Add to `server/.env`:
+   ```
+   DB_SERVER=localhost
+   DB_INSTANCE=SQLEXPRESS
+   DB_NAME=ikonex
+   DB_USER=ikonex_app
+   DB_PASSWORD=the password you set
+   ```
+   If SQL Server Browser can't run, leave `DB_INSTANCE` empty and set `DB_PORT` instead. Find the port in Configuration Manager → TCP/IP → *IP Addresses* → *IPAll* → *TCP Dynamic Ports*, or set a fixed 1433.
+5. From the project folder:
+   ```
+   npm install
+   npm run db:setup -- --admin you@ikonexsystems.com "Your Name" "YourStrongPassw0rd"
+   ```
+   This creates all tables (Users, Orders, Payments, CatalogItems, SmsCampaigns, SmsMessages, PayoutBatches, Payouts, Settings, ContactMessages). It also loads the products and services from the website and creates your admin login. You can run it again safely.
+6. Run `npm start`, open http://localhost:3000/#/login, then log in.
+
+If `db:setup` can't connect, it prints a checklist of the usual causes: TCP/IP off, Browser stopped, mixed mode not enabled, or a wrong password.
+
+> **Live server (VPS):** the VPS needs its own SQL Server, with the same `DB_*` values in its `server/.env`. Until then the live API keeps taking M-Pesa payments exactly as before. Only the portal shows "database not configured".
+
+## 2. Bulk SMS (Africa's Talking)
+
+1. In your Africa's Talking dashboard, create an API key (*Settings → API Key*). Request a sender ID too if you want your name to show instead of a short code.
+2. Add to `server/.env`:
+   ```
+   AT_USERNAME=your app username (not "sandbox" for live)
+   AT_API_KEY=your key
+   AT_SENDER_ID=IKONEX        # optional, must be approved
+   ```
+3. Set the delivery-report callback in Africa's Talking *SMS → Callback URLs → Delivery Reports* to:
+   `https://ikonexsystems.com/api/sms/delivery/<your MPESA_CALLBACK_SECRET>`
+
+## 3. Bulk payments (M-Pesa B2C)
+
+Add your B2C details to `server/.env`: `MPESA_B2C_SHORTCODE`, `MPESA_B2C_INITIATOR`, `MPESA_B2C_SECURITY_CREDENTIAL` (the encrypted initiator password from the Daraja portal), and the result/timeout URLs shown in `.env.example`. If B2C sits on a different Daraja app, also set its own `MPESA_B2C_CONSUMER_KEY` and `MPESA_B2C_CONSUMER_SECRET`.
+
+Safety built in:
+
+- A batch is saved as a **draft** first.
+- An admin must **type the exact total** to approve it.
+- You can require a **second admin** to approve (Settings → Two-person approval).
+- Every payee shows its M-Pesa reference or the reason it failed.
+- There is a per-payee maximum (`MPESA_B2C_MAX_AMOUNT`).
+
+Restart the API after editing `server/.env` (`pm2 restart ikonex-api --update-env` on the VPS).

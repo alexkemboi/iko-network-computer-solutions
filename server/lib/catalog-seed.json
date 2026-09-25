@@ -1,0 +1,275 @@
+[
+ {
+  "kind": "product",
+  "name": "Internet Billing System",
+  "section": "Software Products",
+  "category": "Payments & Finance",
+  "description": "Automated Customer Billing \u00b7 Bandwidth Monitoring \u00b7 Online Payments Integration \u00b7 Subscription Management \u00b7 Invoice & Receipt Generation"
+ },
+ {
+  "kind": "product",
+  "name": "School Fees Management",
+  "section": "Software Products",
+  "category": "Education",
+  "description": "Student Fee Tracking \u00b7 Mpesa & Bank Integration \u00b7 Automated Receipts \u00b7 Fee Balance Management \u00b7 Financial Reports & Analytics"
+ },
+ {
+  "kind": "product",
+  "name": "School Academics System",
+  "section": "Software Products",
+  "category": "Education",
+  "description": "Student Academic Records \u00b7 Exam & Grading Management \u00b7 Attendance Tracking \u00b7 Timetable Scheduling \u00b7 Parent & Teacher Portal"
+ },
+ {
+  "kind": "product",
+  "name": "Property Management System",
+  "section": "Software Products",
+  "category": "Business Operations",
+  "description": "Tenant Management \u00b7 Rent Collection & Billing \u00b7 Lease Agreement Tracking \u00b7 Maintenance Requests \u00b7 Property Financial Reports"
+ },
+ {
+  "kind": "product",
+  "name": "Time Tabling Software",
+  "section": "Software Products",
+  "category": "Education",
+  "description": "Automated Timetable Generation \u00b7 Conflict Detection \u00b7 Class Scheduling \u00b7 Teacher Allocation \u00b7 Printable Timetables"
+ },
+ {
+  "kind": "product",
+  "name": "Point Of Sale System",
+  "section": "Software Products",
+  "category": "Business Operations",
+  "description": "Sales & Inventory Management \u00b7 Barcode Scanning \u00b7 Multi-Branch Support \u00b7 Customer Purchase Tracking \u00b7 Business Reporting Dashboard"
+ },
+ {
+  "kind": "product",
+  "name": "Visa POS To Crypto System",
+  "section": "Software Products",
+  "category": "Payments & Finance",
+  "description": "Crypto Wallet Integration \u00b7 Visa POS Processing \u00b7 Secure Transactions \u00b7 Real-Time Currency Conversion \u00b7 Digital Payment Analytics"
+ },
+ {
+  "kind": "product",
+  "name": "Shylock Lending System",
+  "section": "Software Products",
+  "category": "Payments & Finance",
+  "description": "Loan Processing Workflow \u00b7 Repayment Scheduling \u00b7 Customer Loan Tracking \u00b7 Interest Calculation \u00b7 Financial Reports & Insights"
+ },
+ {
+  "kind": "service",
+  "name": "Web Development",
+  "section": "Software Development",
+  "category": null,
+  "description": "Create modern, fast, and responsive websites tailored to your business needs. We develop scalable front-end and back-end solutions using industry-leading technologies."
+ },
+ {
+  "kind": "service",
+  "name": "Mobile Development",
+  "section": "Software Development",
+  "category": null,
+  "description": "Build intuitive and high-performance mobile applications for Android and iOS with seamless user experiences and scalable architecture."
+ },
+ {
+  "kind": "service",
+  "name": "Software Development",
+  "section": "Software Development",
+  "category": null,
+  "description": "Transform business operations with enterprise-grade software systems, desktop applications, and automation platforms."
+ },
+ {
+  "kind": "service",
+  "name": "Graphics Design",
+  "section": "Creative Services",
+  "category": null,
+  "description": "Professional logo creation, social media graphics, UI/UX mockups, marketing materials and modern visual identity systems tailored for businesses."
+ },
+ {
+  "kind": "service",
+  "name": "Printing Services",
+  "section": "Creative Services",
+  "category": null,
+  "description": "High-quality printing solutions for business cards, banners, posters, brochures and branded merchandise with premium finishing."
+ },
+ {
+  "kind": "service",
+  "name": "Digital Branding",
+  "section": "Creative Services",
+  "category": null,
+  "description": "Modern branding and digital marketing solutions designed to increase visibility, strengthen brand presence and grow businesses."
+ },
+ {
+  "kind": "service",
+  "name": "Printing",
+  "section": "Cyber Services",
+  "category": null,
+  "description": "Professional high-quality printing services for documents, brochures, business cards, flyers, reports, and promotional materials."
+ },
+ {
+  "kind": "service",
+  "name": "Photocopy",
+  "section": "Cyber Services",
+  "category": null,
+  "description": "Fast and reliable photocopy services with crystal-clear black & white and full-color reproduction for all document types."
+ },
+ {
+  "kind": "service",
+  "name": "Scanning",
+  "section": "Cyber Services",
+  "category": null,
+  "description": "Convert physical documents into secure digital formats with high-resolution scanning and document archiving services."
+ },
+ {
+  "kind": "service",
+  "name": "Lamination & Binding",
+  "section": "Cyber Services",
+  "category": null,
+  "description": "Protect important documents with premium lamination and create professional presentations using various binding options."
+ },
+ {
+  "kind": "service",
+  "name": "Email Services",
+  "section": "Online Services",
+  "category": "Email",
+  "description": "Professional email setup, configuration, migration, and support services for businesses and institutions."
+ },
+ {
+  "kind": "service",
+  "name": "KRA Services",
+  "section": "Online Services",
+  "category": "Tax & Finance",
+  "description": "Assistance with KRA PIN registration, tax returns filing, compliance services, and online tax management."
+ },
+ {
+  "kind": "service",
+  "name": "eCitizen Services",
+  "section": "Online Services",
+  "category": "Government",
+  "description": "Application support for passports, certificates, permits, business registration, and other eCitizen services."
+ },
+ {
+  "kind": "service",
+  "name": "KUCCPS Services",
+  "section": "Online Services",
+  "category": "Education",
+  "description": "Student placement support, application guidance, course revisions, and institution selection assistance."
+ },
+ {
+  "kind": "service",
+  "name": "NTSA Services",
+  "section": "Online Services",
+  "category": "Transport",
+  "description": "Vehicle registration, driving license applications, transfers, renewals, and transport compliance support."
+ },
+ {
+  "kind": "service",
+  "name": "TIMS Services",
+  "section": "Online Services",
+  "category": "Transport",
+  "description": "Access transport-related services including vehicle inspection bookings, ownership transfers, and licensing."
+ },
+ {
+  "kind": "service",
+  "name": "GHRIS Services",
+  "section": "Online Services",
+  "category": "Government",
+  "description": "Government employee account management, profile updates, payroll access, and HR-related support."
+ },
+ {
+  "kind": "service",
+  "name": "Payslip Services",
+  "section": "Online Services",
+  "category": "Government",
+  "description": "Secure access, retrieval, printing, and management of government employee payslips and payroll records."
+ },
+ {
+  "kind": "service",
+  "name": "CRB Services",
+  "section": "Online Services",
+  "category": "Tax & Finance",
+  "description": "Credit report checks, clearance certificate applications, dispute resolution, and financial advisory support."
+ },
+ {
+  "kind": "service",
+  "name": "HELB Services",
+  "section": "Online Services",
+  "category": "Education",
+  "description": "Loan applications, compliance certificates, repayment guidance, account management, and support services."
+ },
+ {
+  "kind": "service",
+  "name": "Website Development Training",
+  "section": "Training",
+  "category": null,
+  "description": "Learn modern frontend and full stack web development using industry-standard technologies and real-world projects."
+ },
+ {
+  "kind": "service",
+  "name": "Full Stack Software Development",
+  "section": "Training",
+  "category": null,
+  "description": "Master full stack application development from frontend interfaces to backend APIs and databases."
+ },
+ {
+  "kind": "service",
+  "name": "Backend & API Engineering",
+  "section": "Training",
+  "category": null,
+  "description": "Build scalable backend systems, APIs and enterprise-grade server applications using modern development practices."
+ },
+ {
+  "kind": "service",
+  "name": "Database & System Design",
+  "section": "Training",
+  "category": null,
+  "description": "Understand database architecture, system scalability and clean software engineering principles."
+ },
+ {
+  "kind": "service",
+  "name": "Deployment & DevOps Training",
+  "section": "Training",
+  "category": null,
+  "description": "Learn how to deploy, manage and maintain modern web applications in production environments."
+ },
+ {
+  "kind": "service",
+  "name": "Software Development Lifecycle",
+  "section": "Training",
+  "category": null,
+  "description": "Understand the complete software development lifecycle from planning and design to deployment and maintenance."
+ },
+ {
+  "kind": "service",
+  "name": "Technology Research",
+  "section": "Research & Innovation",
+  "category": null,
+  "description": "We conduct advanced technology research to help organizations discover modern digital opportunities and solutions."
+ },
+ {
+  "kind": "service",
+  "name": "Innovation & Product Design",
+  "section": "Research & Innovation",
+  "category": null,
+  "description": "Transform ideas into scalable digital products through innovation-driven design and strategic planning."
+ },
+ {
+  "kind": "service",
+  "name": "AI & Intelligent Systems",
+  "section": "Research & Innovation",
+  "category": null,
+  "description": "Research and development of intelligent systems, automation solutions and AI-powered digital platforms."
+ },
+ {
+  "kind": "service",
+  "name": "Business Intelligence",
+  "section": "Research & Innovation",
+  "category": null,
+  "description": "Data-driven research and analytics solutions to support business growth and strategic decision making."
+ },
+ {
+  "kind": "service",
+  "name": "Startup & Innovation Support",
+  "section": "Research & Innovation",
+  "category": null,
+  "description": "Helping startups and enterprises build innovative digital solutions from concept to scalable deployment."
+ }
+]

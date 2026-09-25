@@ -24,6 +24,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createPortal } from "./lib/portal.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -298,6 +299,19 @@ const FRIENDLY_RESULT = {
 };
 
 // ---- handlers ---------------------------------------------------------------
+// ---- portal: accounts, dashboard, orders/payments records, bulk SMS & payouts ----
+const portal = createPortal({
+  dataDir,
+  send,
+  readBody,
+  clientIp,
+  rateLimited,
+  normalisePhone,
+  appendJsonl,
+  corsHeaders,
+});
+portal.setMpesaMissing(() => missing);
+
 const stkPush = async (req, res) => {
   if (missing.length) {
     return send(res, 503, {
@@ -307,7 +321,8 @@ const stkPush = async (req, res) => {
 
   const body = await readBody(req);
   const phone = normalisePhone(body.phone);
-  const amount = Number(body.amount);
+  // If the item has a price in Products/Services, that price is what gets charged
+  const amount = await portal.hooks.priceFor(body.description, Number(body.amount));
 
   if (!phone) return send(res, 400, { error: "Enter a valid Safaricom number, e.g. 0712 345 678." });
   if (!Number.isInteger(amount) || amount < 1 || amount > cfg.maxAmount) {
@@ -334,7 +349,12 @@ const stkPush = async (req, res) => {
       .trim()
       .slice(0, 13) || "Payment";
 
-  const result = await darajaPost(cfg.urls.stkPush, {
+  // Record the order first (when the database is connected)
+  const order = await portal.hooks.orderStarted(req, { phone, amount, body });
+
+  let result;
+  try {
+    result = await darajaPost(cfg.urls.stkPush, {
     BusinessShortCode: cfg.shortcode,
     Password: password(ts),
     Timestamp: ts,
@@ -346,9 +366,19 @@ const stkPush = async (req, res) => {
     CallBackURL: callbackUrlWithSecret(),
     AccountReference: reference,
     TransactionDesc: desc,
-  });
+    });
+  } catch (err) {
+    await portal.hooks.paymentRejected(order, err.message);
+    throw err;
+  }
 
   const id = result.CheckoutRequestID;
+  await portal.hooks.paymentRequested(order, {
+    checkoutRequestId: id,
+    merchantRequestId: result.MerchantRequestID,
+    phone,
+    amount,
+  });
   const record = {
     status: "pending",
     phone,
@@ -364,7 +394,12 @@ const stkPush = async (req, res) => {
   appendJsonl("payments.jsonl", { event: "stk_sent", id, ...record });
   console.log(`STK push sent ${id} → ${maskPhone(phone)} KES ${amount} (${record.item})`);
 
-  send(res, 200, { checkoutRequestId: id, customerMessage: result.CustomerMessage });
+  send(res, 200, {
+    checkoutRequestId: id,
+    customerMessage: result.CustomerMessage,
+    orderNo: order?.orderNo,
+    amount,
+  });
 };
 
 const callback = async (req, res, secret) => {
@@ -398,10 +433,23 @@ const callback = async (req, res, secret) => {
     payments.set(id, record);
     notify(id);
     appendJsonl("payments.jsonl", { event: "callback", id, ...record });
+    await portal.hooks.paymentSettled(id, {
+      status: record.status,
+      resultCode: cb.ResultCode,
+      resultDesc: record.resultDesc,
+      receipt: record.receipt,
+    });
     console.log(`Callback ${id}: ${record.status}${record.receipt ? ` receipt ${record.receipt}` : ""}`);
   } else if (id) {
-    console.warn("Callback for unknown CheckoutRequestID", id);
+    console.warn("Callback for CheckoutRequestID not in memory (restart?)", id);
     appendJsonl("payments.jsonl", { event: "callback_unknown", id, body: cb });
+    const items = Object.fromEntries((cb.CallbackMetadata?.Item || []).map((i) => [i.Name, i.Value]));
+    await portal.hooks.paymentSettled(id, {
+      status: RESULT_STATUS(cb.ResultCode),
+      resultCode: cb.ResultCode,
+      resultDesc: cb.ResultDesc,
+      receipt: items.MpesaReceiptNumber,
+    });
   }
 
   send(res, 200, { ResultCode: 0, ResultDesc: "Accepted" });
@@ -443,6 +491,7 @@ const status = async (_req, res, id) => {
     if (q.ResultCode === undefined) return send(res, 200, { status: "pending" });
     const st = RESULT_STATUS(q.ResultCode);
     const record = { ...known, status: st, resultCode: q.ResultCode, resultDesc: q.ResultDesc };
+    await portal.hooks.paymentSettled(id, { status: st, resultCode: q.ResultCode, resultDesc: q.ResultDesc });
     payments.set(id, record);
     notify(id);
     appendJsonl("payments.jsonl", { event: "query", id, status: st, resultCode: q.ResultCode });
@@ -506,6 +555,13 @@ const contact = async (req, res) => {
     service: String(b.service || "").slice(0, 200),
     message,
   });
+  await portal.hooks.contact({
+    name,
+    email: String(b.email || "").slice(0, 200),
+    phone: String(b.phone || "").slice(0, 40),
+    service: String(b.service || "").slice(0, 200),
+    message,
+  });
   send(res, 200, { ok: true });
 };
 
@@ -527,7 +583,14 @@ export const handleRequest = async (req, res) => {
         ok: true,
         mpesa: missing.length ? `not configured (missing: ${missing.join(", ")})` : cfg.mode,
         problems: configProblems,
+        database: portal.status().connected ? "connected" : portal.status().error,
       });
+    }
+
+    // Accounts, dashboard, catalogue, bulk SMS/payouts and their callbacks
+    if (portal.handles(p)) {
+      if (await portal.handle(req, res, url)) return;
+      return send(res, 404, { error: "Not found" });
     }
 
     if (req.method === "POST" && p === "/api/mpesa/stkpush") return await stkPush(req, res);

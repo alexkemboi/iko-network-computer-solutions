@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
+import { API_BASE, PAYMENTS_ENABLED } from "./config";
 import CheckoutModal from "./CheckoutModal";
 import DetailsModal from "./DetailsModal";
 
@@ -20,14 +21,40 @@ const OrderContext = createContext({
   setEnquiry: () => {},
 });
 
+// Prices set by staff in the portal (Products / Services). Loaded once, the
+// first time someone opens checkout; the server enforces the same price anyway.
+let pricesPromise = null;
+const loadPrices = () => {
+  if (!PAYMENTS_ENABLED) return Promise.resolve({});
+  if (!pricesPromise) {
+    pricesPromise = fetch(`${API_BASE}/api/catalog`)
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then(({ items = [] }) =>
+        Object.fromEntries(items.filter((i) => i.price > 0).map((i) => [i.name.trim().toLowerCase(), Number(i.price)]))
+      )
+      .catch(() => {
+        pricesPromise = null; // try again next time
+        return {};
+      });
+  }
+  return pricesPromise;
+};
+
 export const OrderProvider = ({ children }) => {
   const [checkoutItem, setCheckoutItem] = useState(null);
   const [detailsItem, setDetailsItem] = useState(null);
   const [enquiry, setEnquiry] = useState("");
 
+  const openSeq = useRef(0);
   const openCheckout = useCallback((item) => {
     setDetailsItem(null);
     setCheckoutItem(item);
+    if (!item || (typeof item.price === "number" && item.price > 0)) return;
+    const seq = ++openSeq.current;
+    loadPrices().then((prices) => {
+      const price = prices[String(item.name || "").trim().toLowerCase()];
+      if (price && seq === openSeq.current) setCheckoutItem((cur) => (cur && cur.name === item.name ? { ...cur, price } : cur));
+    });
   }, []);
 
   const openDetails = useCallback((item) => setDetailsItem(item), []);
