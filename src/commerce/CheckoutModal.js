@@ -151,6 +151,18 @@ const CheckoutModal = ({ item, onClose, onEnquire }) => {
         setStage("failed");
       }
     } catch (err) {
+      if (err.unavailable) {
+        // Payment service down or not configured: never leave the customer
+        // stuck — let them send the order instead. Nothing was charged.
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[IKONEX] M-Pesa checkout unavailable:",
+          err.message,
+          "— check that the API is running and server/.env has the Daraja keys (see server/README.md)."
+        );
+        setStage("offline");
+        return;
+      }
       setMessage(err.message || "We couldn't start the payment. Please try again.");
       setStage("failed");
     }
@@ -399,7 +411,7 @@ const CheckoutModal = ({ item, onClose, onEnquire }) => {
           <div className="ix-notice ix-notice--warn" role="status">
             <FaInfoCircle aria-hidden="true" />
             <span>
-              Online M-Pesa checkout isn't switched on yet, so no payment has been
+              Online M-Pesa checkout isn't available right now, so no payment has been
               taken. Send us this order and we'll confirm it and send the M-Pesa
               request to <strong>{formatMpesaPhone(phone)}</strong>, or call{" "}
               <a href={`tel:${BUSINESS_PHONE_TEL}`}>{BUSINESS_PHONE_DISPLAY}</a>.
