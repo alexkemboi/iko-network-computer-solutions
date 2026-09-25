@@ -563,7 +563,11 @@ export const mpesaReadiness = () =>
     : `${cfg.mode} ready (shortcode ${cfg.shortcode}, ${cfg.transactionType})`) +
   (configProblems.length ? `\n  ⚠ ${configProblems.join("\n  ⚠ ")}` : "");
 
-const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
+// Start listening unless another script embeds this module (the React dev
+// server via src/setupProxy.js, or `npm run mpesa:check`). Don't rely on
+// process.argv[1]: pm2 and other process managers launch scripts through
+// their own wrapper, so argv[1] is not this file there.
+const isMain = !process.env.IKONEX_API_EMBEDDED;
 
 if (isMain) {
   if (!cfg.callbackSecret && !missing.length) {

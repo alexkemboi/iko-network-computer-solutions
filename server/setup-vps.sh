@@ -70,23 +70,45 @@ if ! command -v pm2 >/dev/null 2>&1; then
 fi
 green "pm2 $(pm2 -v)"
 
-if as_user "pm2 describe $APP_NAME >/dev/null 2>&1"; then
-  as_user "cd '$PROJECT_DIR' && pm2 restart $APP_NAME --update-env" >/dev/null
-  green "Restarted $APP_NAME"
-else
-  as_user "cd '$PROJECT_DIR' && pm2 start server/mpesa-server.mjs --name $APP_NAME" >/dev/null
-  green "Started $APP_NAME"
+NODE_BIN="$(command -v node)"
+
+# Is something else already using the port?
+PORT_OWNER="$(ss -ltnp 2>/dev/null | awk -v p=":$PORT" '$4 ~ p"$" {print $NF}' | head -1 || true)"
+if [ -n "$PORT_OWNER" ] && ! echo "$PORT_OWNER" | grep -q "mpesa-server\|PM2\|node"; then
+  red "Port $PORT is already used by another program: $PORT_OWNER"
+  echo "   Pick a free port: set PORT=5051 in server/.env, then re-run: sudo PORT=5051 bash server/setup-vps.sh"
+  exit 1
 fi
+
+# (Re)create the pm2 process so it always runs with the SAME Node that passed
+# the checks above (pm2 installed under an older system Node is a common trap).
+as_user "pm2 delete $APP_NAME >/dev/null 2>&1 || true"
+as_user "cd '$PROJECT_DIR' && pm2 start server/mpesa-server.mjs --name $APP_NAME --interpreter '$NODE_BIN' --time" >/dev/null
+green "Started $APP_NAME with $NODE_BIN ($(node -v))"
+
 as_user "pm2 save" >/dev/null
 if [ "$(id -u)" = "0" ] && [ "$RUN_USER" != "root" ]; then
   env PATH="$PATH" pm2 startup systemd -u "$RUN_USER" --hp "$(getent passwd "$RUN_USER" | cut -d: -f6)" >/dev/null 2>&1 || true
 fi
 
-sleep 1
-if curl -fsS "http://127.0.0.1:$PORT/api/health" >/dev/null; then
+# Wait up to 15s for the API to answer
+STARTED=""
+for i in $(seq 1 15); do
+  if curl -fsS "http://127.0.0.1:$PORT/api/health" >/dev/null 2>&1; then STARTED=1; break; fi
+  sleep 1
+done
+
+if [ -n "$STARTED" ]; then
   green "API answering on 127.0.0.1:$PORT — $(curl -fsS "http://127.0.0.1:$PORT/api/health")"
 else
-  red "The API did not start. Run: pm2 logs $APP_NAME"
+  red "The API did not start. Here is why (last lines of its log):"
+  echo "────────────────────────────────────────────────────────────"
+  as_user "pm2 logs $APP_NAME --lines 30 --nostream" 2>&1 | tail -40 || true
+  echo "────────────────────────────────────────────────────────────"
+  echo "Trying to run it directly for a clearer error:"
+  as_user "cd '$PROJECT_DIR' && timeout 5 '$NODE_BIN' server/mpesa-server.mjs" 2>&1 | tail -15 || true
+  echo "────────────────────────────────────────────────────────────"
+  echo "Copy everything above and send it over."
   exit 1
 fi
 

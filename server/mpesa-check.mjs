@@ -8,7 +8,9 @@
  *
  * Secrets are never printed in full.
  */
-import {
+// Load the API module without starting its HTTP server
+process.env.IKONEX_API_EMBEDDED = "1";
+const {
   cfg,
   missing,
   configProblems,
@@ -17,7 +19,7 @@ import {
   password,
   darajaTimestamp,
   normalisePhone,
-} from "./mpesa-server.mjs";
+} = await import("./mpesa-server.mjs");
 
 const mask = (v) => (v ? `${v.slice(0, 3)}…${v.slice(-2)} (${v.length} chars)` : "(empty)");
 const ok = (m) => console.log(`  ✔ ${m}`);

@@ -12,6 +12,7 @@ const path = require("path");
 const { pathToFileURL } = require("url");
 
 module.exports = function setupProxy(app) {
+  process.env.IKONEX_API_EMBEDDED = "1"; // mount inside the dev server, don't open a port
   const modulePath = pathToFileURL(path.join(__dirname, "..", "server", "mpesa-server.mjs")).href;
   const apiReady = import(modulePath).then((api) => {
     // eslint-disable-next-line no-console
