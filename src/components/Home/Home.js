@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import {
   FaLaptopCode,
@@ -8,6 +8,7 @@ import {
   FaLightbulb,
   FaPaintBrush,
   FaArrowRight,
+  FaPhoneAlt,
 } from "react-icons/fa";
 
 import slide1 from "../../images/banner.png";
@@ -16,7 +17,11 @@ import slide3 from "../../images/banner.png";
 import slide4 from "../../images/header.png";
 import slide5 from "../../images/banner.png";
 
+const SLIDE_DURATION = 5000;
+
 function Home() {
+  const shouldReduceMotion = useReducedMotion();
+
   const slides = [
     {
       image: slide1,
@@ -59,26 +64,40 @@ function Home() {
     },
   ];
 
-  const [currentSlide, setCurrentSlide] =
-    useState(0);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
+  const nextSlide = () =>
+    setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
+
+  // With motion enabled, the active dot's progress animation drives the
+  // autoplay (so pausing on hover/focus freezes both in sync). With reduced
+  // motion, fall back to a plain timer.
   useEffect(() => {
+    if (!shouldReduceMotion || isPaused) return undefined;
+
     const interval = setInterval(() => {
       setCurrentSlide((prev) =>
-        prev === slides.length - 1
-          ? 0
-          : prev + 1
+        prev === slides.length - 1 ? 0 : prev + 1
       );
-    }, 5000);
+    }, SLIDE_DURATION);
 
     return () => clearInterval(interval);
-  }, [slides.length]);
+  }, [slides.length, isPaused, shouldReduceMotion]);
+
+  const slide = slides[currentSlide];
 
   return (
     <>
       <section
         className="hero-section"
-      
+        id="home"
+        aria-roledescription="carousel"
+        aria-label="Highlights"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onFocus={() => setIsPaused(true)}
+        onBlur={() => setIsPaused(false)}
       >
         <div className="hero-overlay"></div>
 
@@ -86,13 +105,13 @@ function Home() {
         <div className="glow glow-1"></div>
         <div className="glow glow-2"></div>
 
-        <div className="container hero-container">
+        <div className="hero-container">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
               initial={{
                 opacity: 0,
-                y: 25,
+                y: shouldReduceMotion ? 0 : 25,
               }}
               animate={{
                 opacity: 1,
@@ -100,101 +119,85 @@ function Home() {
               }}
               exit={{
                 opacity: 0,
-                y: -20,
+                y: shouldReduceMotion ? 0 : -20,
               }}
               transition={{
                 duration: 0.6,
+                ease: [0.22, 1, 0.36, 1],
               }}
               className="hero-card"
+              aria-live={isPaused ? "polite" : "off"}
             >
               {/* LEFT CONTENT */}
               <div className="hero-content">
                 <div className="hero-badge">
-                  <span className="badge-icon">
-                    {slides[currentSlide].icon}
-                  </span>
+                  <span className="badge-icon">{slide.icon}</span>
 
-                  <span>
-                 {
-                    slides[currentSlide]
-                      .title
-                  }
-                  </span>
+                  <span>{slide.title}</span>
                 </div>
 
-                <h1 className="hero-title">
-                  {
-                    slides[currentSlide]
-                      .title
-                  }
-                </h1>
+                <h1 className="hero-title">{slide.title}</h1>
 
-                <p className="hero-description">
-                  {
-                    slides[currentSlide]
-                      .description
-                  }
-                </p>
+                <p className="hero-description">{slide.description}</p>
 
                 <div className="hero-buttons">
-                  <a
-                    href="#services"
-                    className="primary-btn"
-                  >
+                  <a href="#services" className="ix-btn ix-btn--primary hero-btn">
                     Explore Services
-                    <FaArrowRight />
+                    <FaArrowRight aria-hidden="true" />
                   </a>
 
-                  <a
-                    href="#contact"
-                    className="secondary-btn"
-                  >
+                  <a href="#contact" className="ix-btn ix-btn--ghost hero-btn">
+                    <FaPhoneAlt aria-hidden="true" className="hero-btn__lead" />
                     Contact Us
                   </a>
                 </div>
 
                 {/* Dots */}
-                <div className="slider-dots">
-                  {slides.map(
-                    (_, index) => (
-                      <button
-                        key={index}
-                        className={`dot ${
-                          currentSlide ===
-                          index
-                            ? "active-dot"
-                            : ""
-                        }`}
-                        onClick={() =>
-                          setCurrentSlide(
-                            index
-                          )
-                        }
-                      />
-                    )
-                  )}
+                <div className="slider-dots" role="group" aria-label="Choose slide">
+                  {slides.map((s, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className={`dot ${currentSlide === index ? "active-dot" : ""} ${
+                        isPaused ? "is-paused" : ""
+                      }`}
+                      aria-label={`Slide ${index + 1}: ${s.title}`}
+                      aria-current={currentSlide === index ? "true" : undefined}
+                      onClick={() => setCurrentSlide(index)}
+                      onAnimationEnd={
+                        !shouldReduceMotion && currentSlide === index
+                          ? nextSlide
+                          : undefined
+                      }
+                      style={{ "--slide-duration": `${SLIDE_DURATION}ms` }}
+                    />
+                  ))}
+
+                  <span className="slide-count" aria-hidden="true">
+                    {String(currentSlide + 1).padStart(2, "0")}
+                    <span> / {String(slides.length).padStart(2, "0")}</span>
+                  </span>
                 </div>
               </div>
 
               {/* RIGHT IMAGE */}
               <div className="hero-image-wrapper">
-                <motion.img
-                  src={
-                    slides[currentSlide]
-                      .image
-                  }
-                  alt="IKONEX"
-                  className="hero-image"
-                  initial={{
-                    scale: 1.05,
-                  }}
-                  animate={{
-                    scale: 1,
-                  }}
-                  transition={{
-                    duration: 0.7,
-                  }}
-                />
+                <div className="hero-image-frame">
+                  <motion.img
+                    src={slide.image}
+                    alt="IKONEX"
+                    className="hero-image"
+                    initial={{
+                      scale: shouldReduceMotion ? 1 : 1.05,
+                    }}
+                    animate={{
+                      scale: 1,
+                    }}
+                    transition={{
+                      duration: 0.7,
+                    }}
+                  />
+                </div>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -203,340 +206,234 @@ function Home() {
         <style>{`
           .hero-section {
             position: relative;
-
-            min-height: 82vh;
-
+            min-height: 88vh;
             display: flex;
             align-items: center;
-
             overflow: hidden;
-
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            background: linear-gradient(
-            180deg,
-            #0f172a 0%,
-            #111827 50%,
-            #0f172a 100%
-          );
-            padding:
-              130px 20px
-              60px;
+            isolation: isolate;
+            background: var(--bg);
+            padding: 128px 24px 72px;
           }
 
           .hero-overlay {
             position: absolute;
             inset: 0;
-
+            z-index: -1;
             background:
-              linear-gradient(
-                135deg,
-                rgba(0,0,0,.88),
-                rgba(0,0,0,.72)
-              );
+              radial-gradient(1000px 500px at 15% 0%, var(--brand-soft-2), transparent 60%),
+              radial-gradient(900px 500px at 100% 100%, var(--brand-soft), transparent 60%);
+          }
+
+          .hero-overlay::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+              linear-gradient(var(--grid-line) 1px, transparent 1px),
+              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 56px 56px;
+            -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 75%);
+            mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 75%);
           }
 
           .hero-container {
             position: relative;
             z-index: 2;
-
-            max-width: 1400px;
+            width: 100%;
+            max-width: 1280px;
+            margin: 0 auto;
           }
 
           .hero-card {
             display: grid;
-
-            grid-template-columns:
-              1.1fr 1fr;
-
+            grid-template-columns: 1.05fr 1fr;
             align-items: center;
-
-            gap: 40px;
-
-            background:
-              rgba(255,255,255,.06);
-
-            border:
-              1px solid
-              rgba(255,255,255,.08);
-
-            backdrop-filter:
-              blur(14px);
-
-            border-radius: 30px;
-
-            padding: 45px;
-
+            gap: clamp(28px, 4vw, 56px);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            -webkit-backdrop-filter: blur(14px);
+            backdrop-filter: blur(14px);
+            border-radius: var(--radius-xl);
+            padding: clamp(28px, 4vw, 52px);
             overflow: hidden;
-
-            box-shadow:
-              0 25px 60px
-              rgba(0,0,0,.25);
+            box-shadow: var(--shadow-lg);
           }
 
           .hero-badge {
             display: inline-flex;
-
             align-items: center;
-
-            gap: 12px;
-
-            padding:
-              10px 18px;
-
+            gap: 10px;
+            max-width: 100%;
+            padding: 6px 16px 6px 6px;
             border-radius: 999px;
-
-            background:
-              rgba(255,255,255,.08);
-
-            border:
-              1px solid
-              rgba(255,255,255,.12);
-
-            margin-bottom: 25px;
-
-            color: white;
-
-            font-size: .9rem;
-
+            background: var(--brand-soft);
+            border: 1px solid var(--brand-border);
+            margin-bottom: 22px;
+            color: var(--brand-text);
+            font-size: .8rem;
             font-weight: 700;
-
-            letter-spacing: .05em;
+            letter-spacing: .04em;
           }
 
           .badge-icon {
-            width: 38px;
-            height: 38px;
-
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
             border-radius: 50%;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            background:
-              linear-gradient(
-                135deg,
-                #22c55e,
-                #16a34a
-              );
-
-            color: white;
-
-            font-size: 1rem;
+            background: var(--gradient-brand);
+            color: var(--on-brand);
+            font-size: .85rem;
           }
 
           .hero-title {
-            color: white;
-
-            font-size:
-              clamp(
-                2.6rem,
-                5vw,
-                4.5rem
-              );
-
-            font-weight: 900;
-
-            line-height: 1.08;
-
+            color: var(--heading);
+            font-size: clamp(2.3rem, 4.8vw, 4rem);
+            font-weight: 800;
+            line-height: 1.06;
+            letter-spacing: -0.04em;
             margin-bottom: 20px;
           }
 
           .hero-description {
-            color:
-              rgba(255,255,255,.82);
-
-            font-size: 1.05rem;
-
-            line-height: 1.9;
-
-            margin-bottom: 35px;
-
-            max-width: 580px;
+            color: var(--text-muted);
+            font-size: clamp(1rem, 1.3vw, 1.1rem);
+            line-height: 1.85;
+            margin-bottom: 32px;
+            max-width: 560px;
           }
 
           .hero-buttons {
             display: flex;
-
             align-items: center;
-
-            gap: 16px;
-
+            gap: 12px;
             flex-wrap: wrap;
           }
 
-          .primary-btn {
-            display: inline-flex;
-
-            align-items: center;
-
-            gap: 10px;
-
-            padding:
-              15px 28px;
-
-            border-radius: 14px;
-
-            background:
-              linear-gradient(
-                135deg,
-                #22c55e,
-                #16a34a
-              );
-
-            color: white;
-
-            text-decoration: none;
-
-            font-weight: 700;
-
-            transition: .3s ease;
+          .hero-btn {
+            min-height: 52px;
+            padding: 14px 26px;
           }
 
-          .primary-btn:hover {
-            transform:
-              translateY(-3px);
-
-            color: white;
-
-            box-shadow:
-              0 12px 24px
-              rgba(
-                34,
-                197,
-                94,
-                .25
-              );
-          }
-
-          .secondary-btn {
-            display: inline-flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            padding:
-              15px 28px;
-
-            border-radius: 14px;
-
-            background:
-              rgba(255,255,255,.08);
-
-            border:
-              1px solid
-              rgba(255,255,255,.12);
-
-            color: white;
-
-            text-decoration: none;
-
-            font-weight: 700;
-
-            transition: .3s ease;
-          }
-
-          .secondary-btn:hover {
-            background:
-              rgba(255,255,255,.15);
-
-            color: white;
-
-            transform:
-              translateY(-3px);
+          .hero-btn:hover .hero-btn__lead {
+            transform: rotate(-12deg);
           }
 
           .hero-image-wrapper {
             display: flex;
-
             justify-content: center;
-
             align-items: center;
           }
 
-          .hero-image {
+          .hero-image-frame {
+            position: relative;
             width: 100%;
-
-            max-width: 620px;
-
+            max-width: 600px;
             border-radius: 26px;
+            padding: 8px;
+            background: linear-gradient(145deg, var(--brand-soft-2), transparent 60%);
+          }
 
+          .hero-image {
+            display: block;
+            width: 100%;
+            border-radius: 20px;
             object-fit: cover;
-
-            box-shadow:
-              0 25px 60px
-              rgba(0,0,0,.35);
+            box-shadow: var(--shadow-lg);
           }
 
           .slider-dots {
             display: flex;
-
-            gap: 12px;
-
+            align-items: center;
+            gap: 8px;
             margin-top: 40px;
           }
 
           .dot {
-            width: 12px;
-            height: 12px;
-
-            border-radius: 50%;
-
+            position: relative;
+            width: 10px;
+            height: 10px;
+            padding: 0;
+            border-radius: 999px;
             border: none;
+            overflow: hidden;
+            background: var(--border-strong);
+            cursor: pointer;
+            transition: width .4s var(--ease), background-color .3s var(--ease);
+          }
 
-            background:
-              rgba(255,255,255,.25);
-
-            transition: .3s ease;
+          .dot:hover {
+            background: var(--brand-border);
           }
 
           .active-dot {
-            background: #22c55e;
+            width: 42px;
+            background: var(--brand-soft-2);
+          }
 
-            transform: scale(1.2);
+          .active-dot::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--gradient-brand);
+            transform-origin: left;
+            animation: dot-progress var(--slide-duration, 5s) linear forwards;
+          }
+
+          .active-dot.is-paused::after {
+            animation-play-state: paused;
+          }
+
+          @keyframes dot-progress {
+            from { transform: scaleX(0); }
+            to { transform: scaleX(1); }
+          }
+
+          .slide-count {
+            margin-left: 10px;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--heading);
+            font-variant-numeric: tabular-nums;
+          }
+
+          .slide-count span {
+            color: var(--text-subtle);
+            font-weight: 600;
           }
 
           .glow {
             position: absolute;
-
+            z-index: -1;
             border-radius: 50%;
-
             filter: blur(120px);
-
-            opacity: .2;
+            opacity: var(--glow-opacity);
+            pointer-events: none;
           }
 
           .glow-1 {
-            width: 350px;
-            height: 350px;
-
-            background: #22c55e;
-
+            width: 380px;
+            height: 380px;
+            background: var(--brand);
             top: 10%;
-            left: -100px;
+            left: -120px;
           }
 
           .glow-2 {
-            width: 400px;
-            height: 400px;
-
-            background: #16a34a;
-
-            bottom: -120px;
-            right: -100px;
+            width: 420px;
+            height: 420px;
+            background: var(--brand-2);
+            bottom: -140px;
+            right: -120px;
           }
 
           @media (max-width: 991px) {
-
             .hero-card {
               grid-template-columns: 1fr;
-
               text-align: center;
-
-              padding: 35px 25px;
             }
 
             .hero-description {
@@ -550,40 +447,37 @@ function Home() {
             }
 
             .hero-image-wrapper {
-              margin-top: 10px;
-            }
-
-            .hero-title {
-              font-size: 2.8rem;
+              margin-top: 4px;
             }
           }
 
           @media (max-width: 768px) {
-
             .hero-section {
               min-height: auto;
-
-              padding:
-                120px 12px
-                50px;
+              padding: 108px 14px 48px;
             }
 
             .hero-card {
-              padding: 28px 20px;
-
               border-radius: 24px;
             }
 
-            .hero-title {
-              font-size: 2.2rem;
+            .hero-badge {
+              font-size: .74rem;
             }
 
-            .hero-description {
-              font-size: .98rem;
+            .hero-image-frame {
+              border-radius: 20px;
+              padding: 6px;
             }
 
             .hero-image {
-              border-radius: 20px;
+              border-radius: 16px;
+            }
+          }
+
+          @media (max-width: 420px) {
+            .hero-buttons .ix-btn {
+              width: 100%;
             }
           }
         `}</style>

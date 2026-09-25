@@ -1,36 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#0b1120" />
     <meta
       name="description"
       content="Web site created using create-react-app"
     />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-   
+
+    <!-- Apply the saved (or system) theme before first paint to avoid a flash -->
+    <script>
+      (function () {
+        var theme;
+        try {
+          theme = localStorage.getItem("ikonex-theme");
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+        }
+        var root = document.documentElement;
+        root.setAttribute("data-theme", theme);
+        root.style.colorScheme = theme;
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute("content", theme === "dark" ? "#0b1120" : "#f6faf8");
+      })();
+    </script>
+
     <title>IKONEX SYSTEMS</title>
-    <link rel="shortcut icon" type="image/png" href="../src/images/logo.png"/>   
+    <link rel="shortcut icon" type="image/png" href="%PUBLIC_URL%/logo.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-    rel="stylesheet"
-    href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-  />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-DGln9iSTN81E/gOFT90zL2Qd3PqA3JFpH1eNScYkDNTnKkkBzlCFI+Hf8AYPQJd04CwAJKQrLrA+SGlJMx/O1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    />
 
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"> 
-  <!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" integrity="sha512-DGln9iSTN81E/gOFT90zL2Qd3PqA3JFpH1eNScYkDNTnKkkBzlCFI+Hf8AYPQJd04CwAJKQrLrA+SGlJMx/O1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-<!-- Popper.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.3/umd/popper.min.js"></script>
-
-<!-- Bootstrap JavaScript -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
+    <!-- jQuery / Popper / Bootstrap JS: deferred so they no longer block rendering -->
+    <script defer src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.3/umd/popper.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.0/js/bootstrap.min.js"></script>
   </head>
   <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    
   </body>
 </html>

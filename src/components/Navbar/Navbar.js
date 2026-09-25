@@ -1,14 +1,104 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   FaBars,
   FaTimes,
+  FaChevronDown,
+  FaArrowRight,
+  FaInfoCircle,
+  FaBriefcase,
+  FaEnvelope,
+  FaSignInAlt,
+  FaLaptopCode,
+  FaGlobe,
+  FaMobileAlt,
+  FaCode,
+  FaCubes,
+  FaShieldAlt,
+  FaPrint,
+  FaFileAlt,
+  FaBook,
+  FaWifi,
+  FaDesktop,
+  FaNetworkWired,
+  FaTools,
+  FaConciergeBell,
+  FaPaintBrush,
+  FaGraduationCap,
+  FaLightbulb,
+  FaHeadset,
 } from "react-icons/fa";
 
 import logo from "../../images/logo.png";
+import ThemeToggle from "./ThemeToggle";
+import "./Navbar.css";
+
+/*
+ * "What We Do" combines the former Software, Cyber, Computers and Services
+ * menu items. Each former item is now a column heading (still a link) with
+ * its related offerings listed underneath.
+ */
+const WHAT_WE_DO = [
+  {
+    key: "software",
+    label: "Software",
+    href: "#software",
+    icon: FaLaptopCode,
+    blurb: "Websites, apps & systems",
+    items: [
+      { label: "Web Development", href: "#software", icon: FaGlobe },
+      { label: "Mobile Development", href: "#software", icon: FaMobileAlt },
+      { label: "Software Development", href: "#software", icon: FaCode },
+      { label: "Enterprise Products", href: "#products", icon: FaCubes },
+    ],
+  },
+  {
+    key: "cyber",
+    label: "Cyber",
+    href: "#cyber",
+    icon: FaShieldAlt,
+    blurb: "Document & online services",
+    items: [
+      { label: "Printing & Photocopy", href: "#cyber", icon: FaPrint },
+      { label: "Scanning", href: "#cyber", icon: FaFileAlt },
+      { label: "Lamination & Binding", href: "#cyber", icon: FaBook },
+      { label: "Online Services", href: "#online-services", icon: FaWifi },
+    ],
+  },
+  {
+    key: "computers",
+    label: "Computers",
+    href: "/",
+    icon: FaDesktop,
+    blurb: "Hardware, networks & IT",
+    items: [
+      { label: "Computer Solutions", href: "/", icon: FaDesktop },
+      { label: "Networking", href: "/", icon: FaNetworkWired },
+      { label: "Technology Consulting", href: "/", icon: FaTools },
+    ],
+  },
+  {
+    key: "services",
+    label: "Services",
+    href: "#branding",
+    icon: FaConciergeBell,
+    blurb: "Creative, training & research",
+    items: [
+      { label: "Graphics, Print & Branding", href: "#branding", icon: FaPaintBrush },
+      { label: "Training Programs", href: "#training", icon: FaGraduationCap },
+      { label: "Research & Innovation", href: "#research", icon: FaLightbulb },
+    ],
+  },
+];
 
 const NavbarComponent = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] =
-    useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMegaOpen, setIsMegaOpen] = useState(false);
+  const [isMobileWhatOpen, setIsMobileWhatOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const megaRef = useRef(null);
+  const triggerRef = useRef(null);
+  const closeTimer = useRef(null);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -28,18 +118,71 @@ const NavbarComponent = () => {
     const handleResize = () => {
       if (window.innerWidth > 991) {
         setIsMobileMenuOpen(false);
+      } else {
+        setIsMegaOpen(false);
       }
     };
 
     window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener(
-        "resize",
-        handleResize
-      );
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
+
+  // Elevate navbar once the page scrolls
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Close mega menu on outside click / Escape
+  useEffect(() => {
+    if (!isMegaOpen && !isMobileMenuOpen) return undefined;
+
+    const onPointerDown = (e) => {
+      if (megaRef.current && !megaRef.current.contains(e.target)) {
+        setIsMegaOpen(false);
+      }
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (isMegaOpen) {
+          setIsMegaOpen(false);
+          if (triggerRef.current) triggerRef.current.focus();
+        }
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isMegaOpen, isMobileMenuOpen]);
+
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+
+  const openMega = useCallback(() => {
+    clearTimeout(closeTimer.current);
+    setIsMegaOpen(true);
+  }, []);
+
+  const scheduleCloseMega = useCallback(() => {
+    clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setIsMegaOpen(false), 160);
+  }, []);
+
+  const handleMegaBlur = (e) => {
+    if (megaRef.current && !megaRef.current.contains(e.relatedTarget)) {
+      setIsMegaOpen(false);
+    }
+  };
 
   const toggleMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -49,22 +192,25 @@ const NavbarComponent = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const closeMega = () => setIsMegaOpen(false);
+
   return (
     <>
-      <nav className="navbar-wrapper">
+      <a href="#main-content" className="skip-link">
+        Skip to content
+      </a>
+
+      <nav
+        className={`navbar-wrapper ${isScrolled ? "is-scrolled" : ""}`}
+        aria-label="Main navigation"
+      >
         <div className="navbar-container">
           {/* Logo */}
           <a href="/" className="navbar-brand-custom">
-            <img
-              src={logo}
-              alt="IKONEX Logo"
-              className="logo-img"
-            />
+            <img src={logo} alt="IKONEX Logo" className="logo-img" />
 
             <div className="brand-text">
-              <span className="brand-primary">
-                IKONEX SYSTEMS
-              </span>
+              <span className="brand-primary">IKONEX SYSTEMS</span>
 
               <span className="brand-secondary">
                 TECHNOLOGY • SOFTWARE • CYBER • TRAINING
@@ -81,28 +227,96 @@ const NavbarComponent = () => {
                 </a>
               </li>
 
-              <li>
-                <a href="/" className="nav-link-custom">
-                  Software
-                </a>
-              </li>
+              <li
+                className={`nav-mega ${isMegaOpen ? "is-open" : ""}`}
+                ref={megaRef}
+                onMouseEnter={openMega}
+                onMouseLeave={scheduleCloseMega}
+                onBlur={handleMegaBlur}
+              >
+                <button
+                  type="button"
+                  ref={triggerRef}
+                  className="nav-link-custom nav-mega__trigger"
+                  aria-expanded={isMegaOpen}
+                  aria-controls="what-we-do-menu"
+                  onClick={() => setIsMegaOpen((v) => !v)}
+                >
+                  What We Do
+                  <FaChevronDown className="nav-mega__chevron" aria-hidden="true" />
+                </button>
 
-              <li>
-                <a href="/" className="nav-link-custom">
-                  Cyber
-                </a>
-              </li>
+                <div
+                  id="what-we-do-menu"
+                  className="mega-panel"
+                  role="region"
+                  aria-label="What We Do"
+                >
+                  <div className="mega-panel__inner">
+                    <div className="mega-grid">
+                      {WHAT_WE_DO.map((group) => {
+                        const GroupIcon = group.icon;
+                        return (
+                          <div className="mega-group" key={group.key}>
+                            <a
+                              href={group.href}
+                              className="mega-group__head"
+                              onClick={closeMega}
+                            >
+                              <span className="mega-group__icon">
+                                <GroupIcon aria-hidden="true" />
+                              </span>
+                              <span>
+                                <span className="mega-group__title">
+                                  {group.label}
+                                </span>
+                                <span className="mega-group__blurb">
+                                  {group.blurb}
+                                </span>
+                              </span>
+                            </a>
 
-              <li>
-                <a href="/" className="nav-link-custom">
-                  Computers
-                </a>
-              </li>
+                            <ul className="mega-list">
+                              {group.items.map((item) => {
+                                const ItemIcon = item.icon;
+                                return (
+                                  <li key={item.label}>
+                                    <a
+                                      href={item.href}
+                                      className="mega-item"
+                                      onClick={closeMega}
+                                    >
+                                      <ItemIcon
+                                        className="mega-item__icon"
+                                        aria-hidden="true"
+                                      />
+                                      <span>{item.label}</span>
+                                      <FaArrowRight
+                                        className="mega-item__arrow"
+                                        aria-hidden="true"
+                                      />
+                                    </a>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        );
+                      })}
+                    </div>
 
-              <li>
-                <a href="/" className="nav-link-custom">
-                  Services
-                </a>
+                    <a href="#contact" className="mega-cta" onClick={closeMega}>
+                      <span className="mega-cta__icon">
+                        <FaHeadset aria-hidden="true" />
+                      </span>
+                      <span className="mega-cta__text">
+                        <strong>Not sure where to start?</strong>
+                        <span>Tell us what you need and we'll point you the right way.</span>
+                      </span>
+                      <FaArrowRight className="mega-cta__arrow" aria-hidden="true" />
+                    </a>
+                  </div>
+                </div>
               </li>
 
               <li>
@@ -112,54 +326,53 @@ const NavbarComponent = () => {
               </li>
 
               <li>
-                <a href="/" className="nav-link-custom">
+                <a href="#contact" className="nav-link-custom">
                   Contact
-                </a>
-              </li>
-
-              <li>
-                <a href="/" className="login-btn">
-                  Login
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Mobile Toggle */}
-          <button
-            className="mobile-toggle"
-            onClick={toggleMenu}
-            aria-label="Toggle Menu"
-          >
-            {isMobileMenuOpen ? (
-              <FaTimes />
-            ) : (
-              <FaBars />
-            )}
-          </button>
+          <div className="nav-actions">
+            <ThemeToggle />
+
+            <a href="/" className="login-btn">
+              <FaSignInAlt aria-hidden="true" />
+              Login
+            </a>
+
+            {/* Mobile Toggle */}
+            <button
+              className="mobile-toggle"
+              onClick={toggleMenu}
+              aria-label="Toggle Menu"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-sidebar"
+            >
+              {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+            </button>
+          </div>
         </div>
       </nav>
 
       {/* Overlay */}
       <div
-        className={`mobile-overlay ${
-          isMobileMenuOpen ? "show-overlay" : ""
-        }`}
+        className={`mobile-overlay ${isMobileMenuOpen ? "show-overlay" : ""}`}
         onClick={closeMenu}
+        aria-hidden="true"
       ></div>
 
       {/* Mobile Sidebar */}
-      <div
-        className={`mobile-sidebar ${
-          isMobileMenuOpen ? "sidebar-open" : ""
-        }`}
+      <aside
+        id="mobile-sidebar"
+        className={`mobile-sidebar ${isMobileMenuOpen ? "sidebar-open" : ""}`}
+        aria-hidden={!isMobileMenuOpen}
+        aria-label="Mobile navigation"
+        {...(!isMobileMenuOpen ? { inert: "" } : {})}
       >
         <div className="mobile-sidebar-header">
           <div className="mobile-brand">
-            <img
-              src={logo}
-              alt="IKONEX Logo"
-            />
+            <img src={logo} alt="IKONEX Logo" />
 
             <span>IKONEX</span>
           </div>
@@ -167,6 +380,7 @@ const NavbarComponent = () => {
           <button
             className="close-btn"
             onClick={closeMenu}
+            aria-label="Close menu"
           >
             <FaTimes />
           </button>
@@ -175,477 +389,78 @@ const NavbarComponent = () => {
         <ul className="mobile-nav">
           <li>
             <a href="/" onClick={closeMenu}>
+              <FaInfoCircle className="mobile-nav__icon" aria-hidden="true" />
               About Us
             </a>
           </li>
 
-          <li>
-            <a href="/" onClick={closeMenu}>
-              Software
-            </a>
+          <li className={`mobile-acc ${isMobileWhatOpen ? "is-open" : ""}`}>
+            <button
+              type="button"
+              className="mobile-acc__trigger"
+              aria-expanded={isMobileWhatOpen}
+              aria-controls="mobile-what-we-do"
+              onClick={() => setIsMobileWhatOpen((v) => !v)}
+            >
+              <FaCubes className="mobile-nav__icon" aria-hidden="true" />
+              What We Do
+              <FaChevronDown className="mobile-acc__chevron" aria-hidden="true" />
+            </button>
+
+            <div id="mobile-what-we-do" className="mobile-acc__panel">
+              <div className="mobile-acc__inner">
+                {WHAT_WE_DO.map((group) => {
+                  const GroupIcon = group.icon;
+                  return (
+                    <div className="mobile-group" key={group.key}>
+                      <a
+                        href={group.href}
+                        className="mobile-group__head"
+                        onClick={closeMenu}
+                      >
+                        <GroupIcon aria-hidden="true" />
+                        {group.label}
+                      </a>
+                      <ul>
+                        {group.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          return (
+                            <li key={item.label}>
+                              <a href={item.href} onClick={closeMenu}>
+                                <ItemIcon aria-hidden="true" />
+                                {item.label}
+                              </a>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </li>
 
           <li>
             <a href="/" onClick={closeMenu}>
-              Cyber Services
-            </a>
-          </li>
-
-          <li>
-            <a href="/" onClick={closeMenu}>
-              Computers
-            </a>
-          </li>
-
-          <li>
-            <a href="/" onClick={closeMenu}>
-              Services
-            </a>
-          </li>
-
-          <li>
-            <a href="/" onClick={closeMenu}>
+              <FaBriefcase className="mobile-nav__icon" aria-hidden="true" />
               Portfolio
             </a>
           </li>
 
           <li>
-            <a href="/" onClick={closeMenu}>
+            <a href="#contact" onClick={closeMenu}>
+              <FaEnvelope className="mobile-nav__icon" aria-hidden="true" />
               Contact Us
             </a>
           </li>
         </ul>
 
-        <a
-          href="/"
-          className="mobile-login-btn"
-          onClick={closeMenu}
-        >
+        <a href="/" className="mobile-login-btn" onClick={closeMenu}>
+          <FaSignInAlt aria-hidden="true" />
           Login
         </a>
-      </div>
-
-      <style>{`
-        * {
-          box-sizing: border-box;
-        }
-
-        .navbar-wrapper {
-          position: fixed;
-          top: 20px;
-          left: 0;
-          width: 100%;
-          z-index: 9999;
-          padding: 0 20px;
-        }
-
-        .navbar-container {
-          max-width: 1400px;
-
-          margin: auto;
-
-          display: flex;
-
-          align-items: center;
-
-          justify-content: space-between;
-
-          padding: 14px 24px;
-
-          border-radius: 24px;
-
-          background: rgba(15, 23, 42, 0.95);
-
-          backdrop-filter: blur(18px);
-
-          border: 1px solid rgba(255,255,255,0.08);
-
-          box-shadow:
-            0 10px 40px rgba(0,0,0,0.22);
-        }
-
-        .navbar-brand-custom {
-          display: flex;
-
-          align-items: center;
-
-          gap: 14px;
-
-          text-decoration: none;
-
-          min-width: fit-content;
-        }
-
-        .logo-img {
-          width: 58px;
-          height: 58px;
-
-          border-radius: 50%;
-
-          object-fit: contain;
-
-          background: white;
-
-          padding: 4px;
-        }
-
-        .brand-text {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .brand-primary {
-          color: white;
-
-          font-size: 1.35rem;
-
-          font-weight: 900;
-
-          letter-spacing: .5px;
-        }
-
-        .brand-secondary {
-          color: #34d399;
-
-          font-size: .75rem;
-
-          font-weight: 700;
-
-          letter-spacing: 1.5px;
-
-          margin-top: 2px;
-        }
-
-        .desktop-menu {
-          display: flex;
-        }
-
-        .custom-nav {
-          display: flex;
-
-          align-items: center;
-
-          gap: 8px;
-
-          list-style: none;
-
-          margin: 0;
-
-          padding: 0;
-        }
-
-        .nav-link-custom {
-          position: relative;
-
-          color: #ffffff;
-
-          text-decoration: none;
-
-          font-size: .96rem;
-
-          font-weight: 700;
-
-          padding: 12px 16px;
-
-          border-radius: 12px;
-
-          transition: all .3s ease;
-        }
-
-        .nav-link-custom:hover {
-          color: #34d399;
-
-          background: rgba(255,255,255,0.05);
-        }
-
-        .nav-link-custom::after {
-          content: "";
-
-          position: absolute;
-
-          left: 16px;
-          bottom: 7px;
-
-          width: 0;
-
-          height: 3px;
-
-          background: #34d399;
-
-          border-radius: 20px;
-
-          transition: .3s ease;
-        }
-
-        .nav-link-custom:hover::after,
-        .nav-link-custom.active::after {
-          width: calc(100% - 32px);
-        }
-
-        .active {
-          color: #34d399;
-        }
-
-        .login-btn {
-          display: inline-flex;
-
-          align-items: center;
-
-          justify-content: center;
-
-          padding: 12px 28px;
-
-          border-radius: 999px;
-
-          background: linear-gradient(
-            135deg,
-            #009b55,
-            #19c37d
-          );
-
-          color: white;
-
-          text-decoration: none;
-
-          font-weight: 800;
-
-          transition: all .3s ease;
-        }
-
-        .login-btn:hover {
-          transform: translateY(-2px);
-
-          box-shadow:
-            0 10px 20px rgba(0,155,85,.25);
-        }
-
-        .mobile-toggle {
-          display: none;
-
-          background: transparent;
-
-          border: none;
-
-          color: white;
-
-          font-size: 1.5rem;
-
-          cursor: pointer;
-        }
-
-        .mobile-overlay {
-          position: fixed;
-
-          inset: 0;
-
-          background: rgba(0,0,0,.45);
-
-          backdrop-filter: blur(3px);
-
-          opacity: 0;
-
-          visibility: hidden;
-
-          transition: .3s ease;
-
-          z-index: 9997;
-        }
-
-        .show-overlay {
-          opacity: 1;
-
-          visibility: visible;
-        }
-
-        .mobile-sidebar {
-          position: fixed;
-
-          top: 0;
-          right: -100%;
-
-          width: 320px;
-
-          max-width: 90%;
-
-          height: 100vh;
-
-          background: #0f172a;
-
-          z-index: 9998;
-
-          padding: 28px 24px;
-
-          transition: right .35s ease;
-
-          display: flex;
-
-          flex-direction: column;
-        }
-
-        .sidebar-open {
-          right: 0;
-        }
-
-        .mobile-sidebar-header {
-          display: flex;
-
-          align-items: center;
-
-          justify-content: space-between;
-
-          margin-bottom: 40px;
-        }
-
-        .mobile-brand {
-          display: flex;
-
-          align-items: center;
-
-          gap: 10px;
-        }
-
-        .mobile-brand img {
-          width: 45px;
-          height: 45px;
-
-          border-radius: 50%;
-
-          background: white;
-
-          padding: 4px;
-        }
-
-        .mobile-brand span {
-          color: white;
-
-          font-weight: 800;
-
-          font-size: 1.2rem;
-        }
-
-        .close-btn {
-          background: transparent;
-
-          border: none;
-
-          color: white;
-
-          font-size: 1.4rem;
-
-          cursor: pointer;
-        }
-
-        .mobile-nav {
-          list-style: none;
-
-          padding: 0;
-
-          margin: 0;
-
-          display: flex;
-
-          flex-direction: column;
-
-          gap: 12px;
-        }
-
-        .mobile-nav li a {
-          display: block;
-
-          color: #ffffff;
-
-          text-decoration: none;
-
-          padding: 14px 16px;
-
-          border-radius: 14px;
-
-          background: rgba(255,255,255,0.04);
-
-          font-weight: 700;
-
-          transition: all .3s ease;
-        }
-
-        .mobile-nav li a:hover {
-          background: rgba(52,211,153,.15);
-
-          color: #34d399;
-
-          transform: translateX(5px);
-        }
-
-        .mobile-login-btn {
-          margin-top: auto;
-
-          display: flex;
-
-          align-items: center;
-
-          justify-content: center;
-
-          padding: 14px;
-
-          border-radius: 16px;
-
-          background: linear-gradient(
-            135deg,
-            #009b55,
-            #19c37d
-          );
-
-          color: white;
-
-          text-decoration: none;
-
-          font-weight: 800;
-
-          transition: .3s ease;
-        }
-
-        .mobile-login-btn:hover {
-          transform: translateY(-2px);
-        }
-
-        @media (max-width: 991px) {
-
-          .desktop-menu {
-            display: none;
-          }
-
-          .mobile-toggle {
-            display: block;
-          }
-
-          .brand-secondary {
-            display: none;
-          }
-        }
-
-        @media (max-width: 576px) {
-
-          .navbar-wrapper {
-            padding: 0 10px;
-          }
-
-          .navbar-container {
-            padding: 12px 18px;
-          }
-
-          .logo-img {
-            width: 50px;
-            height: 50px;
-          }
-
-          .brand-primary {
-            font-size: 1rem;
-          }
-
-          .mobile-sidebar {
-            width: 290px;
-          }
-        }
-      `}</style>
+      </aside>
     </>
   );
 };

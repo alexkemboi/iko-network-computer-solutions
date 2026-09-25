@@ -1,5 +1,5 @@
-import React from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import React, { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaEnvelope,
   FaFileInvoiceDollar,
@@ -10,368 +10,336 @@ import {
   FaUserTie,
   FaMoneyCheckAlt,
   FaChartLine,
+  FaGlobeAfrica,
+  FaThLarge,
+  FaLandmark,
+  FaCoins,
+  FaBus,
+  FaAt,
+  FaSearch,
   FaArrowRight,
+  FaBolt,
 } from "react-icons/fa";
+import SectionHeader, { EASE } from "../shared/SectionHeader";
+import FilterTabs from "../shared/FilterTabs";
+import { SectionCta } from "../shared/CardActions";
+import { useOrder } from "../../commerce/OrderContext";
+
+export const onlineServices = [
+  {
+    name: "Email Services",
+    description:
+      "Professional email setup, configuration, migration, and support services for businesses and institutions.",
+    icon: FaEnvelope,
+  },
+  {
+    name: "KRA Services",
+    description:
+      "Assistance with KRA PIN registration, tax returns filing, compliance services, and online tax management.",
+    icon: FaFileInvoiceDollar,
+  },
+  {
+    name: "eCitizen Services",
+    description:
+      "Application support for passports, certificates, permits, business registration, and other eCitizen services.",
+    icon: FaUserCog,
+  },
+  {
+    name: "KUCCPS Services",
+    description:
+      "Student placement support, application guidance, course revisions, and institution selection assistance.",
+    icon: FaGraduationCap,
+  },
+  {
+    name: "NTSA Services",
+    description:
+      "Vehicle registration, driving license applications, transfers, renewals, and transport compliance support.",
+    icon: FaCar,
+  },
+  {
+    name: "TIMS Services",
+    description:
+      "Access transport-related services including vehicle inspection bookings, ownership transfers, and licensing.",
+    icon: FaTruck,
+  },
+  {
+    name: "GHRIS Services",
+    description:
+      "Government employee account management, profile updates, payroll access, and HR-related support.",
+    icon: FaUserTie,
+  },
+  {
+    name: "Payslip Services",
+    description:
+      "Secure access, retrieval, printing, and management of government employee payslips and payroll records.",
+    icon: FaMoneyCheckAlt,
+  },
+  {
+    name: "CRB Services",
+    description:
+      "Credit report checks, clearance certificate applications, dispute resolution, and financial advisory support.",
+    icon: FaChartLine,
+  },
+  {
+    name: "HELB Services",
+    description:
+      "Loan applications, compliance certificates, repayment guidance, account management, and support services.",
+    icon: FaGraduationCap,
+  },
+];
+
+/* Presentation-only grouping for quick discovery */
+const CATEGORIES = [
+  { value: "all", label: "All", icon: FaThLarge },
+  { value: "government", label: "Government", icon: FaLandmark },
+  { value: "finance", label: "Tax & Finance", icon: FaCoins },
+  { value: "education", label: "Education", icon: FaGraduationCap },
+  { value: "transport", label: "Transport", icon: FaBus },
+  { value: "communication", label: "Email", icon: FaAt },
+];
+
+const SERVICE_CATEGORY = {
+  "Email Services": "communication",
+  "KRA Services": "finance",
+  "eCitizen Services": "government",
+  "KUCCPS Services": "education",
+  "NTSA Services": "transport",
+  "TIMS Services": "transport",
+  "GHRIS Services": "government",
+  "Payslip Services": "government",
+  "CRB Services": "finance",
+  "HELB Services": "education",
+};
+
+const labelFor = (value) => CATEGORIES.find((c) => c.value === value)?.label;
 
 const OnlineServices = () => {
-  const shouldReduceMotion = useReducedMotion();
+  const { openCheckout, openDetails } = useOrder();
+  const [filter, setFilter] = useState("all");
+  const [query, setQuery] = useState("");
 
-  const onlineServices = [
-    {
-      name: "Email Services",
-      description:
-        "Professional email setup, configuration, migration, and support services for businesses and institutions.",
-      icon: FaEnvelope,
-    },
-    {
-      name: "KRA Services",
-      description:
-        "Assistance with KRA PIN registration, tax returns filing, compliance services, and online tax management.",
-      icon: FaFileInvoiceDollar,
-    },
-    {
-      name: "eCitizen Services",
-      description:
-        "Application support for passports, certificates, permits, business registration, and other eCitizen services.",
-      icon: FaUserCog,
-    },
-    {
-      name: "KUCCPS Services",
-      description:
-        "Student placement support, application guidance, course revisions, and institution selection assistance.",
-      icon: FaGraduationCap,
-    },
-    {
-      name: "NTSA Services",
-      description:
-        "Vehicle registration, driving license applications, transfers, renewals, and transport compliance support.",
-      icon: FaCar,
-    },
-    {
-      name: "TIMS Services",
-      description:
-        "Access transport-related services including vehicle inspection bookings, ownership transfers, and licensing.",
-      icon: FaTruck,
-    },
-    {
-      name: "GHRIS Services",
-      description:
-        "Government employee account management, profile updates, payroll access, and HR-related support.",
-      icon: FaUserTie,
-    },
-    {
-      name: "Payslip Services",
-      description:
-        "Secure access, retrieval, printing, and management of government employee payslips and payroll records.",
-      icon: FaMoneyCheckAlt,
-    },
-    {
-      name: "CRB Services",
-      description:
-        "Credit report checks, clearance certificate applications, dispute resolution, and financial advisory support.",
-      icon: FaChartLine,
-    },
-    {
-      name: "HELB Services",
-      description:
-        "Loan applications, compliance certificates, repayment guidance, account management, and support services.",
-      icon: FaGraduationCap,
-    },
-  ];
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return onlineServices.filter((s) => {
+      const inCat = filter === "all" || SERVICE_CATEGORY[s.name] === filter;
+      const inQuery =
+        !q || s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
+      return inCat && inQuery;
+    });
+  }, [filter, query]);
 
-  const containerVariants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: shouldReduceMotion ? 0 : 0.1,
-      },
-    },
-  };
-
-  const cardVariants = {
-    hidden: {
-      opacity: 0,
-      y: shouldReduceMotion ? 0 : 25,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.55,
-      },
-    },
-  };
+  const options = CATEGORIES.map((c) => ({
+    ...c,
+    count:
+      c.value === "all"
+        ? undefined
+        : onlineServices.filter((s) => SERVICE_CATEGORY[s.name] === c.value).length,
+  }));
 
   return (
-    <>
-      <section className="online-services-section">
-        <div className="bg-glow glow-left"></div>
-        <div className="bg-glow glow-right"></div>
+    <section className="ix-section online-services-section" id="online-services">
+      <div className="ix-glow ix-glow--br"></div>
 
-        <div className="container">
-          <motion.div
-            className="section-header"
-            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <span className="section-badge">
-              DIGITAL & GOVERNMENT SERVICES
-            </span>
+      <div className="ix-container">
+        <SectionHeader
+          eyebrow="DIGITAL & GOVERNMENT SERVICES"
+          icon={FaGlobeAfrica}
+          title={<span>Online Services</span>}
+        >
+          Convenient access to essential online, government, educational,
+          transport, tax, and financial services delivered efficiently by our
+          experienced support team.
+        </SectionHeader>
 
-            <h2 className="section-title">
-               <span>Online Services</span>
-            </h2>
+        <div className="ix-toolbar online-toolbar">
+          <FilterTabs
+            label="Filter online services"
+            options={options}
+            value={filter}
+            onChange={setFilter}
+          />
 
-            <p className="section-description">
-              Convenient access to essential online, government, educational,
-              transport, tax, and financial services delivered efficiently by
-              our experienced support team.
-            </p>
-          </motion.div>
+          <label className="ix-search">
+            <span className="ix-sr-only">Search online services</span>
+            <FaSearch aria-hidden="true" />
+            <input
+              type="search"
+              placeholder="Search e.g. KRA, HELB, passport…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </label>
+        </div>
 
-          <motion.div
-            className="services-grid"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {onlineServices.map((service, index) => {
+        <p className="ix-sr-only" aria-live="polite">
+          {visible.length} service{visible.length === 1 ? "" : "s"} shown
+        </p>
+
+        <motion.div className="online-grid" layout>
+          <AnimatePresence initial={false}>
+            {visible.map((service, index) => {
               const Icon = service.icon;
+              const item = {
+                price: service.price,
+                name: service.name,
+                icon: service.icon,
+                section: "Online Services",
+                category: labelFor(SERVICE_CATEGORY[service.name]),
+                description: service.description,
+                orderLabel: "Get Started",
+              };
 
               return (
                 <motion.article
                   key={service.name}
-                  className="service-card"
-                  variants={cardVariants}
-                  whileHover={
-                    shouldReduceMotion
-                      ? {}
-                      : {
-                          y: -10,
-                          scale: 1.02,
-                        }
-                  }
+                  layout
+                  className="ix-card online-card"
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-40px" }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.4, delay: Math.min(index, 6) * 0.04, ease: EASE }}
                 >
-                  <div className="card-overlay"></div>
+                  <div className="online-card__top">
+                    <span className="ix-icon ix-icon--soft online-card__icon" aria-hidden="true">
+                      <Icon />
+                    </span>
+                    <span className="online-card__cat">
+                      {labelFor(SERVICE_CATEGORY[service.name])}
+                    </span>
+                  </div>
 
-                  <motion.div
-                    className="icon-wrapper"
-                    whileHover={
-                      shouldReduceMotion
-                        ? {}
-                        : {
-                            rotate: 5,
-                            scale: 1.1,
-                          }
-                    }
-                  >
-                    <Icon size={28} />
-                  </motion.div>
+                  <h3 className="ix-card__title">{service.name}</h3>
 
-                  <h3>{service.name}</h3>
+                  <p className="ix-card__text">{service.description}</p>
 
-                  <p>{service.description}</p>
+                  <div className="ix-card__footer online-card__actions">
+                    <button
+                      type="button"
+                      className="ix-link online-card__link"
+                      onClick={() => openDetails(item)}
+                      aria-label={`Learn more about ${service.name}`}
+                    >
+                      Learn More
+                      <FaArrowRight aria-hidden="true" />
+                    </button>
 
-                  <a href="/" className="learn-more">
-                    Learn More
-                    <FaArrowRight />
-                  </a>
-
-                  <span className="card-index">
-                    {(index + 1).toString().padStart(2, "0")}
-                  </span>
+                    <button
+                      type="button"
+                      className="ix-btn ix-btn--primary online-card__go"
+                      onClick={() => openCheckout(item)}
+                      aria-label={`Get started with ${service.name} and pay with M-Pesa`}
+                    >
+                      <FaBolt aria-hidden="true" />
+                      Get Started
+                    </button>
+                  </div>
                 </motion.article>
               );
             })}
-          </motion.div>
-        </div>
-      </section>
+          </AnimatePresence>
+
+          {visible.length === 0 && (
+            <div className="ix-empty">
+              No services match “{query}”.{" "}
+              <button
+                type="button"
+                className="ix-link online-reset"
+                onClick={() => {
+                  setQuery("");
+                  setFilter("all");
+                }}
+              >
+                Show all services
+              </button>
+            </div>
+          )}
+        </motion.div>
+
+        <SectionCta text="Don't see the service you need?" label="Ask our team" />
+      </div>
 
       <style>{`
-        .online-services-section {
-          position: relative;
-          overflow: hidden;
-          padding: 110px 20px;
-          background: linear-gradient(
-            180deg,
-            #0f172a 0%,
-            #111827 50%,
-            #0f172a 100%
-          );
+        .online-toolbar {
+          align-items: center;
         }
 
-        .container {
-          max-width: 1400px;
-          margin: 0 auto;
-          position: relative;
-          z-index: 2;
+        .online-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+          gap: clamp(14px, 1.8vw, 22px);
         }
 
-        .section-header {
-          text-align: center;
-          max-width: 850px;
-          margin: 0 auto 70px;
+        .online-card {
+          padding: 22px;
         }
 
-        .section-badge {
-          display: inline-block;
-          padding: 10px 18px;
-          border-radius: 999px;
-          background: rgba(25, 195, 125, 0.15);
-          color: #34d399;
-          font-size: 0.8rem;
-          font-weight: 700;
-          letter-spacing: 0.15em;
-          margin-bottom: 20px;
+        .online-card__top {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin-bottom: 16px;
         }
 
-        .section-title {
-          font-size: clamp(2.5rem, 5vw, 4rem);
-          font-weight: 800;
-          color: #ffffff;
-          margin-bottom: 20px;
-        }
-
-        .section-title span {
-          background: linear-gradient(135deg, #19c37d, #34d399);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-
-        .section-description {
-          color: #94a3b8;
-          line-height: 1.8;
+        .online-card__icon {
+          width: 46px;
+          height: 46px;
+          margin: 0;
+          border-radius: 14px;
           font-size: 1.1rem;
         }
 
-        .services-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 25px;
+        .online-card__cat {
+          font-size: .7rem;
+          font-weight: 700;
+          letter-spacing: .1em;
+          text-transform: uppercase;
+          color: var(--text-subtle);
         }
 
-        .service-card {
-          position: relative;
-          padding: 32px;
-          border-radius: 28px;
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          overflow: hidden;
-          transition: all 0.35s ease;
+        .online-card .ix-card__title {
+          font-size: 1.06rem;
+          margin-bottom: 8px;
         }
 
-        .service-card:hover {
-          border-color: rgba(25, 195, 125, 0.25);
-          box-shadow: 0 20px 50px rgba(25, 195, 125, 0.12);
+        .online-card .ix-card__text {
+          font-size: .9rem;
+          line-height: 1.65;
+          margin-bottom: 18px;
         }
 
-        .card-overlay {
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            135deg,
-            rgba(25, 195, 125, 0.06),
-            transparent
-          );
-          opacity: 0;
-          transition: 0.35s;
-        }
-
-        .service-card:hover .card-overlay {
-          opacity: 1;
-        }
-
-        .icon-wrapper {
-          width: 75px;
-          height: 75px;
-          border-radius: 22px;
+        .online-card__actions {
           display: flex;
           align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #009b55, #19c37d);
-          color: white;
-          margin-bottom: 22px;
-          box-shadow: 0 15px 35px rgba(25, 195, 125, 0.25);
-        }
-
-        .service-card h3 {
-          color: #ffffff;
-          font-size: 1.35rem;
-          font-weight: 700;
-          margin-bottom: 14px;
-        }
-
-        .service-card p {
-          color: #94a3b8;
-          line-height: 1.8;
-          margin-bottom: 24px;
-        }
-
-        .learn-more {
-          display: inline-flex;
-          align-items: center;
+          justify-content: space-between;
           gap: 10px;
-          color: #34d399;
-          text-decoration: none;
-          font-weight: 700;
-          transition: all 0.3s ease;
         }
 
-        .learn-more:hover {
-          transform: translateX(5px);
-          color: #6ee7b7;
+        .online-card__link,
+        .online-reset {
+          background: none;
+          border: 0;
+          padding: 0;
+          cursor: pointer;
+          font-family: inherit;
+          font-size: .88rem;
         }
 
-        .card-index {
-          position: absolute;
-          top: 15px;
-          right: 20px;
-          font-size: 3rem;
-          font-weight: 800;
-          color: rgba(255, 255, 255, 0.04);
+        .online-card__actions {
+          padding-top: 16px;
+          border-top: 1px solid var(--border);
         }
 
-        .bg-glow {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(120px);
-          opacity: 0.2;
-        }
-
-        .glow-left {
-          width: 350px;
-          height: 350px;
-          background: #19c37d;
-          top: -100px;
-          left: -100px;
-        }
-
-        .glow-right {
-          width: 450px;
-          height: 450px;
-          background: #009b55;
-          bottom: -150px;
-          right: -150px;
-        }
-
-        @media (max-width: 768px) {
-          .online-services-section {
-            padding: 80px 15px;
-          }
-
-          .services-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .service-card {
-            padding: 24px;
-          }
+        .online-card__go {
+          box-shadow: none;
+          min-height: 38px;
+          padding: 8px 14px;
+          font-size: .84rem;
+          border-radius: 11px;
         }
       `}</style>
-    </>
+    </section>
   );
 };
 
