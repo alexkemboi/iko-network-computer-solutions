@@ -47,3 +47,5 @@ jobs:
             sudo systemctl reload nginx
 
             echo "Deployment completed successfully."
+
+             pm2 restart ikonex-api --update-env || true
