@@ -30,10 +30,13 @@ jobs:
             cd ~/ikonexsystemswebsites/iko-network-computer-solutions
 
             echo "Pulling latest code..."
-            git pull origin main
+            # Match GitHub exactly; a plain pull aborts when npm has rewritten
+            # package-lock.json on the server. server/.env is git-ignored, so it stays.
+            git fetch origin main
+            git reset --hard origin/main
 
             echo "Installing dependencies..."
-            npm install
+            npm ci
 
             echo "Building application..."
             npm run build
