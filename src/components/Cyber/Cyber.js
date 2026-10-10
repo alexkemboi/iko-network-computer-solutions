@@ -107,7 +107,6 @@ const Cyber = () => {
                   <CardVisual
                     icon={Icon}
                     chips={CHIPS[service.name]}
-                    pattern="circuit"
                     index={index}
                     short
                   />

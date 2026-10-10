@@ -209,14 +209,6 @@
   transform: scale(1.07);
 }
 
-.ix-media__pattern {
-  position: absolute;
-  inset: -10%;
-  width: 120%;
-  height: 120%;
-  color: var(--media-ink);
-}
-
 .ix-media__halo {
   position: absolute;
   width: 60%;

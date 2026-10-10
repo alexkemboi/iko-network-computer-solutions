@@ -175,7 +175,6 @@ const TrainingComponent = () => {
                 <CardVisual
                   icon={training.icon}
                   chips={CHIPS[training.title]}
-                  pattern="waves"
                   badge={`Program ${String(index + 1).padStart(2, "0")}`}
                   badgeIcon={FaGraduationCap}
                 />

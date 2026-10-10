@@ -23,7 +23,6 @@ import {
 import SectionHeader, { useRevealVariants } from "../shared/SectionHeader";
 import Carousel from "../shared/Carousel";
 import CardVisual from "../shared/CardVisual";
-import Parallax from "../shared/Parallax";
 import { CardActions, SectionCta } from "../shared/CardActions";
 import { useOrder } from "../../commerce/OrderContext";
 
@@ -113,17 +112,6 @@ const ResearchInnovationComponent = () => {
 
   return (
     <section className="ix-section tone-night research-section" id="research">
-      <Parallax distance={70}>
-        <svg className="research-orbits" viewBox="0 0 800 800" focusable="false">
-          <circle cx="400" cy="400" r="140" />
-          <circle cx="400" cy="400" r="240" />
-          <circle cx="400" cy="400" r="340" />
-          <circle className="research-orbits__dot" cx="540" cy="400" r="5" />
-          <circle className="research-orbits__dot" cx="400" cy="160" r="4" />
-          <circle className="research-orbits__dot" cx="100" cy="520" r="4" />
-        </svg>
-      </Parallax>
-
       <div className="ix-container">
         <SectionHeader
           eyebrow="RESEARCH & DIGITAL INNOVATION"
@@ -191,7 +179,6 @@ const ResearchInnovationComponent = () => {
                 <CardVisual
                   icon={area.icon}
                   chips={CHIPS[area.title]}
-                  pattern="orbits"
                   index={index}
                 />
 
@@ -226,25 +213,6 @@ const ResearchInnovationComponent = () => {
           background:
             radial-gradient(900px 480px at 50% 0%, var(--brand-soft), transparent 70%),
             var(--bg);
-        }
-
-        .research-orbits {
-          position: absolute;
-          width: min(900px, 120vw);
-          left: 50%;
-          top: 0;
-          transform: translateX(-50%);
-          fill: none;
-          stroke: var(--media-ink);
-          stroke-width: 1;
-          -webkit-mask-image: radial-gradient(circle, #000 30%, transparent 70%);
-          mask-image: radial-gradient(circle, #000 30%, transparent 70%);
-        }
-
-        .research-orbits__dot {
-          fill: var(--brand);
-          stroke: none;
-          opacity: .6;
         }
 
         .research-themes {
