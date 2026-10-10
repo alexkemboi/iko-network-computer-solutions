@@ -249,3 +249,26 @@ Safety built in:
 - There is a per-payee maximum (`MPESA_B2C_MAX_AMOUNT`).
 
 Restart the API after editing `server/.env` (`pm2 restart ikonex-api --update-env` on the VPS).
+
+---
+
+## PostgreSQL (current database)
+
+The app now runs on PostgreSQL. SQL Server is kept only as the source for the one-time copy.
+
+1. Install PostgreSQL (e.g. 16 or 17 from postgresql.org) and note the `postgres` password you choose.
+2. In `server/.env`:
+   ```
+   DB_CLIENT=postgres
+   PGHOST=localhost
+   PGPORT=5432
+   PGDATABASE=ikonex
+   PGUSER=postgres
+   PGPASSWORD=your postgres password
+   ```
+   Keep the `DB_SERVER` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` SQL Server lines until the copy is done.
+3. `npm install` (adds the `pg` driver).
+4. `npm run db:migrate-pg` creates the `ikonex` database and tables in Postgres, copies every table with the same Ids, then prints a row-count check. SQL Server is only read. Running it again skips tables that already have rows; `-- --force` empties Postgres first and copies again.
+5. `npm start` → the portal and logins now use PostgreSQL. `npm run user -- list` shows the migrated accounts.
+
+To go back to SQL Server, set `DB_CLIENT=mssql`. `server/db/ikonex-postgres.sql` is the same schema as a plain SQL file for pgAdmin/psql (optional, the app creates it itself).

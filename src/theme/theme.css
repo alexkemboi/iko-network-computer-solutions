@@ -42,7 +42,6 @@
   --shadow-brand: 0 14px 30px -10px rgba(34, 197, 94, 0.45);
   --glow-opacity: 0.16;
   --number-color: rgba(148, 163, 184, 0.08);
-  --grid-line: rgba(148, 163, 184, 0.06);
   color-scheme: dark;
 }
 
@@ -84,7 +83,6 @@
   --shadow-brand: 0 14px 28px -12px rgba(22, 163, 74, 0.5);
   --glow-opacity: 0.1;
   --number-color: rgba(15, 23, 42, 0.05);
-  --grid-line: rgba(15, 23, 42, 0.045);
   color-scheme: light;
 }
 
@@ -234,11 +232,9 @@ html.theme-animating *::after {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background-image: linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-  background-size: 56px 56px;
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
-  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 75%);
+  background:
+    radial-gradient(900px 480px at 0% 0%, var(--brand-soft), transparent 60%),
+    radial-gradient(800px 460px at 100% 100%, var(--brand-soft), transparent 60%);
   pointer-events: none;
 }
 
@@ -453,6 +449,24 @@ html.theme-animating *::after {
 .ix-card__footer {
   margin-top: auto;
 }
+
+/* Premium corporate presentation: keep the brand accent, remove luminous effects. */
+:root, [data-theme="dark"], [data-theme="light"] {
+  --glow-opacity: 0.035;
+  --shadow-brand: 0 8px 20px -12px rgba(34, 120, 70, 0.22);
+}
+
+h1 { font-size: clamp(2.35rem, 5.4vw, 4.5rem); font-weight: 700; line-height: 1.08; }
+h2 { font-size: clamp(2rem, 4.4vw, 3.25rem); font-weight: 700; line-height: 1.12; }
+h3, h4 { font-weight: 700; }
+.ix-title { font-size: clamp(2rem, 4.3vw, 3.15rem); font-weight: 700; }
+.ix-lead { font-weight: 400; }
+.ix-card::before { display: none; }
+.ix-card::after { height: 2px; background: var(--brand); }
+.ix-card:hover, .ix-card:focus-within { box-shadow: var(--shadow-md); }
+.ix-eyebrow__icon { background: var(--brand); }
+
+.ix-anchor { position: absolute; top: 0; left: 0; }
 
 .ix-rule {
   width: 44px;

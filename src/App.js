@@ -1,14 +1,15 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import './App.css';
-import Cyber from "./components/Cyber/Cyber"
 import NavbarComponent from "./components/Navbar/Navbar";
 import Home from './components/Home/Home';
 import Footer from "./components/Footer/Footer";
-import SoftwareComponent from './components/SoftwareComponent/SoftwareComponent';
 import ProductListComponent from './components/ProductListingComponent/ProductListingComponent';
 import ServiceListComponent from './components/ServiceListingComponent/ServiceListingComponent';
 import TrainingComponent from "./components/Training/Training"
 import ResearchComponent from "./components/Research and Innovation/Research"
+import Capabilities from "./components/Capabilities/Capabilities";
+import Portfolio from "./components/Portfolio/Portfolio";
+import Clients from "./components/Clients/Clients";
 import Contact from "./components/Contact/Contact";
 import { OrderProvider } from "./commerce/OrderContext";
 import { isPortalHash } from "./portal/useHashRoute";
@@ -52,21 +53,36 @@ const useCardSpotlight = () => {
   }, []);
 };
 
+// Standalone pages, keyed by pathname. Anything else renders the landing page.
+const PAGES = {
+  "/what-we-do": () => <>
+    <Capabilities/>
+    <ServiceListComponent/>
+  </>,
+  "/training": () => <TrainingComponent/>,
+  "/research": () => <ResearchComponent/>,
+  "/portfolio": () => <>
+    <Portfolio/>
+    <Clients/>
+  </>,
+  "/cyber-digital-services": () => <ServiceListComponent dedicated />,
+};
+
 function Website() {
   useCardSpotlight();
+  const path = window.location.pathname.replace(/\/$/, "");
+  const page = PAGES[path] || (() => <>
+    <Home/>
+    <ProductListComponent/>
+    <Clients/>
+  </>);
 
   return (
     <OrderProvider>
     <div>
           <NavbarComponent/>
           <main id="main-content">
-            <Home/>
-            <SoftwareComponent/>
-            <ProductListComponent/>
-            <ServiceListComponent/>
-            <Cyber/>
-            <TrainingComponent/>
-            <ResearchComponent/>
+            {page()}
             <Contact/>
           </main>
           <Footer/>

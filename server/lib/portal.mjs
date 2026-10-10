@@ -74,23 +74,32 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
   let dbError = dbConfigured() ? "connecting…" : "Database not configured (set DB_SERVER, DB_USER, DB_PASSWORD in server/.env).";
 
   // ---------------------------------------------------------------- startup
-  const init = async () => {
-    if (!dbConfigured() || process.env.IKONEX_NO_DB_INIT) return;
+  // If the database isn't reachable yet (e.g. the API started before PostgreSQL /
+  // SQL Server finished booting), keep retrying in the background with backoff
+  // instead of reporting "Database connection failed" until the next restart.
+  let connecting = null;
+  let retryDelay = 5000;
+  const connect = () => (connecting ||= (async () => {
     try {
       db = await connectDb();
       await ensureSchema(db);
       repo = makeRepo(db);
       const seeded = await repo.seedCatalog(seedItems);
       dbError = null;
+      retryDelay = 5000;
       console.log(`Database connected: ${db.describe}${seeded ? ` (seeded ${seeded} products/services)` : ""}`);
     } catch (err) {
       dbError = `Database connection failed: ${err.message}`;
       db = null;
       repo = null;
-      console.error(dbError);
+      console.error(`${dbError} — retrying in ${retryDelay / 1000}s`);
+      setTimeout(connect, retryDelay).unref();
+      retryDelay = Math.min(retryDelay * 2, 60000);
+    } finally {
+      connecting = null;
     }
-  };
-  const ready = init();
+  })());
+  const ready = dbConfigured() && !process.env.IKONEX_NO_DB_INIT ? connect() : Promise.resolve();
 
   const status = () => ({ connected: Boolean(repo), error: dbError, describe: db?.describe });
 
@@ -707,6 +716,7 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
       methodMatched = true;
       if (r.method !== req.method) continue;
       await ready;
+      if (!repo && connecting) await connecting; // a background retry is in flight
       if (!repo) {
         json(res, 503, { error: dbError || "Database not connected.", database: false });
         return true;

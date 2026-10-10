@@ -3,10 +3,10 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import {
   FaLaptopCode,
-  FaShieldAlt,
   FaGraduationCap,
-  FaLightbulb,
-  FaPaintBrush,
+  FaRobot,
+  FaChartBar,
+  FaFlask,
   FaArrowRight,
   FaPhoneAlt,
 } from "react-icons/fa";
@@ -26,41 +26,51 @@ function Home() {
     {
       image: slide1,
       icon: <FaLaptopCode />,
-      title: "Website & Software Development",
-      description:
-        "Modern websites, enterprise applications, mobile apps and scalable digital solutions tailored for businesses.",
+      category: "Software Development",
+      title: "Build. Automate. Scale.",
+      description: "We design and develop modern, secure, and scalable software solutions that turn complex business processes into simple digital experiences.",
+      cta: "Explore Software Solutions",
+      href: "/what-we-do#software",
     },
 
     {
       image: slide2,
-      icon: <FaShieldAlt />,
-      title: "Cyber Services",
-      description:
-        "Professional cyber services including networking, printing, online applications and digital support solutions.",
+      icon: <FaGraduationCap />,
+      category: "Software Development Training",
+      title: "Learn. Build. Innovate.",
+      description: "Practical software development training designed to equip students, professionals, and teams with real world skills for today’s technology landscape.",
+      cta: "Explore Training",
+      href: "/training",
     },
 
     {
       image: slide3,
-      icon: <FaGraduationCap />,
-      title: "Software Development Training",
-      description:
-        "Practical training in web development, programming, UI/UX, modern software technologies and digital skills.",
+      icon: <FaFlask />,
+      category: "Research & Innovation",
+      title: "Turning Ideas Into Solutions.",
+      description: "We combine technology research, experimentation, and innovation to develop practical solutions for real world challenges.",
+      cta: "Discover Our Research",
+      href: "/research",
     },
 
     {
       image: slide4,
-      icon: <FaLightbulb />,
-      title: "Research & Innovation",
-      description:
-        "Technology-driven research, innovative solutions and business transformation strategies for growth.",
+      icon: <FaRobot />,
+      category: "Artificial Intelligence",
+      title: "Intelligence That Drives Progress.",
+      description: "Harness AI to automate processes, improve decision making, uncover insights, and create smarter digital solutions.",
+      cta: "Explore AI Solutions",
+      href: "/research",
     },
 
     {
       image: slide5,
-      icon: <FaPaintBrush />,
-      title: "Graphics Design, Print & Branding",
-      description:
-        "Creative branding, graphic design, printing, visual identity and marketing materials for businesses.",
+      icon: <FaChartBar />,
+      category: "Data Analytics",
+      title: "Turn Data Into Decisions.",
+      description: "Transform complex data into meaningful insights through analytics, dashboards, visualization, and intelligent reporting.",
+      cta: "Explore Data Analytics",
+      href: "/research",
     },
   ];
 
@@ -133,7 +143,7 @@ function Home() {
                 <div className="hero-badge">
                   <span className="badge-icon">{slide.icon}</span>
 
-                  <span>{slide.title}</span>
+                  <span>{slide.category}</span>
                 </div>
 
                 <h1 className="hero-title">{slide.title}</h1>
@@ -141,8 +151,8 @@ function Home() {
                 <p className="hero-description">{slide.description}</p>
 
                 <div className="hero-buttons">
-                  <a href="#services" className="ix-btn ix-btn--primary hero-btn">
-                    Explore Services
+                  <a href={slide.href} className="ix-btn ix-btn--primary hero-btn">
+                    {slide.cta}
                     <FaArrowRight aria-hidden="true" />
                   </a>
 
@@ -161,7 +171,7 @@ function Home() {
                       className={`dot ${currentSlide === index ? "active-dot" : ""} ${
                         isPaused ? "is-paused" : ""
                       }`}
-                      aria-label={`Slide ${index + 1}: ${s.title}`}
+                    aria-label={`Slide ${index + 1}: ${s.category} — ${s.title}`}
                       aria-current={currentSlide === index ? "true" : undefined}
                       onClick={() => setCurrentSlide(index)}
                       onAnimationEnd={
@@ -185,7 +195,7 @@ function Home() {
                 <div className="hero-image-frame">
                   <motion.img
                     src={slide.image}
-                    alt="IKONEX"
+                    alt={`IKONEX ${slide.category}`}
                     className="hero-image"
                     initial={{
                       scale: shouldReduceMotion ? 1 : 1.05,
@@ -222,18 +232,6 @@ function Home() {
             background:
               radial-gradient(1000px 500px at 15% 0%, var(--brand-soft-2), transparent 60%),
               radial-gradient(900px 500px at 100% 100%, var(--brand-soft), transparent 60%);
-          }
-
-          .hero-overlay::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background-image:
-              linear-gradient(var(--grid-line) 1px, transparent 1px),
-              linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 56px 56px;
-            -webkit-mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 75%);
-            mask-image: radial-gradient(ellipse at 50% 40%, #000 25%, transparent 75%);
           }
 
           .hero-container {
@@ -482,6 +480,7 @@ function Home() {
           }
         `}</style>
       </section>
+
     </>
   );
 }

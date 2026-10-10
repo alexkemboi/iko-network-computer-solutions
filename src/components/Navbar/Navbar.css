@@ -742,3 +742,24 @@
     display: none;
   }
 }
+
+/* "Explore everything we do" link at the top of the mega panel */
+.mega-overview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--brand-text);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.mega-overview:hover svg {
+  transform: translateX(3px);
+}
+
+.mega-overview svg {
+  font-size: 0.75rem;
+  transition: transform 0.25s var(--ease);
+}

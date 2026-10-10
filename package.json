@@ -10,6 +10,7 @@
     "bootstrap": "^5.3.2",
     "framer-motion": "^12.40.0",
     "mssql": "^11.0.1",
+    "pg": "^8.13.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.9.1",
     "react-dom": "^18.2.0",
@@ -24,7 +25,9 @@
     "eject": "react-scripts eject",
     "api": "node server/mpesa-server.mjs",
     "mpesa:check": "node server/mpesa-check.mjs",
-    "db:setup": "node server/db-setup.mjs"
+    "db:setup": "node server/db-setup.mjs",
+    "user": "node server/user.mjs",
+    "db:migrate-pg": "node server/db-migrate-postgres.mjs"
   },
   "eslintConfig": {
     "extends": [

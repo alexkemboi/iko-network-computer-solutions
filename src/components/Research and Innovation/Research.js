@@ -127,6 +127,7 @@ const ResearchInnovationComponent = () => {
       <div className="ix-container">
         <SectionHeader
           eyebrow="RESEARCH & DIGITAL INNOVATION"
+          level={1}
           icon={FaAtom}
           title={
             <>

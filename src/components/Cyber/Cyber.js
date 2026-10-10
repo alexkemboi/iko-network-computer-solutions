@@ -153,14 +153,7 @@ const Cyber = () => {
         .cyber-grid-bg {
           position: absolute;
           inset: 0;
-          background-image:
-            linear-gradient(var(--grid-line) 1px, transparent 1px),
-            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-            linear-gradient(var(--grid-line) 1px, transparent 1px),
-            linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-          background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
-          -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 70%);
-          mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 70%);
+          background: radial-gradient(900px 480px at 50% 0%, var(--brand-soft), transparent 65%);
         }
 
         .cyber-grid {

@@ -137,6 +137,7 @@ const TrainingComponent = () => {
       <div className="ix-container">
         <SectionHeader
           eyebrow="PROFESSIONAL TRAINING PROGRAMS"
+          level={1}
           icon={FaGraduationCap}
           title={
             <>

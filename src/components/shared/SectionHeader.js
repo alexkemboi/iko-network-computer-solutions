@@ -27,7 +27,8 @@ export const useRevealVariants = (stagger = 0.08) => {
   };
 };
 
-const SectionHeader = ({ eyebrow, icon: Icon, title, children }) => {
+const SectionHeader = ({ eyebrow, icon: Icon, title, children, level = 2 }) => {
+  const Heading = level === 1 ? "h1" : "h2";
   const shouldReduceMotion = useReducedMotion();
 
   return (
@@ -47,7 +48,7 @@ const SectionHeader = ({ eyebrow, icon: Icon, title, children }) => {
         {eyebrow}
       </span>
 
-      <h2 className="ix-title">{title}</h2>
+      <Heading className="ix-title">{title}</Heading>
 
       {children && <p className="ix-lead">{children}</p>}
     </motion.div>

@@ -15,8 +15,6 @@ import {
   FaCubes,
   FaShieldAlt,
   FaPrint,
-  FaFileAlt,
-  FaBook,
   FaWifi,
   FaDesktop,
   FaNetworkWired,
@@ -41,27 +39,27 @@ const WHAT_WE_DO = [
   {
     key: "software",
     label: "Software",
-    href: "#software",
+    href: "/what-we-do#software",
     icon: FaLaptopCode,
     blurb: "Websites, apps & systems",
     items: [
-      { label: "Web Development", href: "#software", icon: FaGlobe },
-      { label: "Mobile Development", href: "#software", icon: FaMobileAlt },
-      { label: "Software Development", href: "#software", icon: FaCode },
-      { label: "Enterprise Products", href: "#products", icon: FaCubes },
+      { label: "Web Development", href: "/what-we-do#software", icon: FaGlobe },
+      { label: "Mobile Development", href: "/what-we-do#software", icon: FaMobileAlt },
+      { label: "Software Development", href: "/what-we-do#software", icon: FaCode },
+      { label: "Enterprise Products", href: "/#products", icon: FaCubes },
     ],
   },
   {
     key: "cyber",
-    label: "Cyber",
-    href: "#cyber",
+    label: "Cyber & Digital Services",
+    href: "/cyber-digital-services",
     icon: FaShieldAlt,
-    blurb: "Document & online services",
+    blurb: "Documents, applications & support",
     items: [
-      { label: "Printing & Photocopy", href: "#cyber", icon: FaPrint },
-      { label: "Scanning", href: "#cyber", icon: FaFileAlt },
-      { label: "Lamination & Binding", href: "#cyber", icon: FaBook },
-      { label: "Online Services", href: "#online-services", icon: FaWifi },
+      { label: "Cyber Services", href: "/cyber-digital-services#cyber", icon: FaShieldAlt },
+      { label: "Online Services", href: "/cyber-digital-services#online-services", icon: FaWifi },
+      { label: "Graphics & Design", href: "/cyber-digital-services#graphics-design", icon: FaPaintBrush },
+      { label: "Branding & Printing", href: "/cyber-digital-services#branding-printing", icon: FaPrint },
     ],
   },
   {
@@ -78,19 +76,28 @@ const WHAT_WE_DO = [
   },
   {
     key: "services",
-    label: "Services",
-    href: "#branding",
+    label: "Creative & Digital Services",
+    href: "/what-we-do#branding",
     icon: FaConciergeBell,
-    blurb: "Creative, training & research",
+    blurb: "Design, branding, training & research",
     items: [
-      { label: "Graphics, Print & Branding", href: "#branding", icon: FaPaintBrush },
-      { label: "Training Programs", href: "#training", icon: FaGraduationCap },
-      { label: "Research & Innovation", href: "#research", icon: FaLightbulb },
+      { label: "Graphics, Print & Branding", href: "/what-we-do#branding", icon: FaPaintBrush },
+      { label: "Training Programs", href: "/training", icon: FaGraduationCap },
+      { label: "Research & Innovation", href: "/research", icon: FaLightbulb },
     ],
   },
 ];
 
+// Standalone pages linked directly from the top-level nav.
+const PAGE_LINKS = [
+  { label: "Training", href: "/training", icon: FaGraduationCap },
+  { label: "Research", href: "/research", icon: FaLightbulb },
+];
+
+const currentPath = () => window.location.pathname.replace(/\/$/, "") || "/";
+
 const NavbarComponent = () => {
+  const path = currentPath();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMegaOpen, setIsMegaOpen] = useState(false);
   const [isMobileWhatOpen, setIsMobileWhatOpen] = useState(false);
@@ -213,7 +220,7 @@ const NavbarComponent = () => {
               <span className="brand-primary">IKONEX SYSTEMS</span>
 
               <span className="brand-secondary">
-                TECHNOLOGY • SOFTWARE • CYBER • TRAINING
+                SOFTWARE • CYBER • TRAINING
               </span>
             </div>
           </a>
@@ -222,7 +229,7 @@ const NavbarComponent = () => {
           <div className="desktop-menu">
             <ul className="custom-nav">
               <li>
-                <a href="/" className="nav-link-custom active">
+                <a href="/" className={`nav-link-custom ${path === "/" ? "active" : ""}`}>
                   About
                 </a>
               </li>
@@ -237,7 +244,7 @@ const NavbarComponent = () => {
                 <button
                   type="button"
                   ref={triggerRef}
-                  className="nav-link-custom nav-mega__trigger"
+                  className={`nav-link-custom nav-mega__trigger ${["/what-we-do", "/cyber-digital-services"].includes(path) ? "active" : ""}`}
                   aria-expanded={isMegaOpen}
                   aria-controls="what-we-do-menu"
                   onClick={() => setIsMegaOpen((v) => !v)}
@@ -253,6 +260,10 @@ const NavbarComponent = () => {
                   aria-label="What We Do"
                 >
                   <div className="mega-panel__inner">
+                    <a href="/what-we-do" className="mega-overview" onClick={closeMega}>
+                      Explore everything we do
+                      <FaArrowRight aria-hidden="true" />
+                    </a>
                     <div className="mega-grid">
                       {WHAT_WE_DO.map((group) => {
                         const GroupIcon = group.icon;
@@ -319,8 +330,16 @@ const NavbarComponent = () => {
                 </div>
               </li>
 
+              {PAGE_LINKS.map((link) => (
+                <li key={link.href}>
+                  <a href={link.href} className={`nav-link-custom ${path === link.href ? "active" : ""}`}>
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+
               <li>
-                <a href="/" className="nav-link-custom">
+                <a href="/portfolio" className={`nav-link-custom ${path === "/portfolio" ? "active" : ""}`}>
                   Portfolio
                 </a>
               </li>
@@ -409,6 +428,10 @@ const NavbarComponent = () => {
 
             <div id="mobile-what-we-do" className="mobile-acc__panel">
               <div className="mobile-acc__inner">
+                <a href="/what-we-do" className="mobile-group__head" onClick={closeMenu}>
+                  <FaArrowRight aria-hidden="true" />
+                  Explore everything we do
+                </a>
                 {WHAT_WE_DO.map((group) => {
                   const GroupIcon = group.icon;
                   return (
@@ -441,8 +464,20 @@ const NavbarComponent = () => {
             </div>
           </li>
 
+          {PAGE_LINKS.map((link) => {
+            const LinkIcon = link.icon;
+            return (
+              <li key={link.href}>
+                <a href={link.href} onClick={closeMenu}>
+                  <LinkIcon className="mobile-nav__icon" aria-hidden="true" />
+                  {link.label}
+                </a>
+              </li>
+            );
+          })}
+
           <li>
-            <a href="/" onClick={closeMenu}>
+            <a href="/portfolio" onClick={closeMenu}>
               <FaBriefcase className="mobile-nav__icon" aria-hidden="true" />
               Portfolio
             </a>

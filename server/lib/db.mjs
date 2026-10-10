@@ -13,6 +13,15 @@
  *   DB_ENCRYPT=false
  *   DB_TRUST_SERVER_CERTIFICATE=true
  *
+ * PostgreSQL: DB_CLIENT=postgres via the `pg` package, using:
+ *
+ *   PGHOST=localhost
+ *   PGPORT=5432
+ *   PGDATABASE=ikonex
+ *   PGUSER=postgres
+ *   PGPASSWORD=...
+ *   PGSSL=false
+ *
  * Tests only: DB_CLIENT=sqlite with DB_FILE (uses Node's built-in node:sqlite).
  *
  * Every query goes through `db.query(sql, params)` with @named parameters.
@@ -57,6 +66,21 @@ const sqliteDialect = {
   startOfMonth: "date('now','start of month')",
   today: "date('now')",
   like: (param) => `LIKE @${param}`,
+};
+
+const postgresDialect = {
+  name: "postgres",
+  now: "(now() AT TIME ZONE 'utc')",
+  insert: (table, cols) =>
+    `INSERT INTO ${table} (${cols.join(", ")}) VALUES (${cols.map((c) => "@" + c).join(", ")}) RETURNING Id`,
+  page: (orderBy) => `ORDER BY ${orderBy} LIMIT @limit OFFSET @offset`,
+  top: () => "",
+  limit: (n) => `LIMIT ${Number(n)}`,
+  dateOnly: (col) => `CAST(${col} AS date)`,
+  daysAgo: (n) => `(CAST((now() AT TIME ZONE 'utc') AS date) - ${Number(n)})`,
+  startOfMonth: "CAST(date_trunc('month', now() AT TIME ZONE 'utc') AS date)",
+  today: "CAST((now() AT TIME ZONE 'utc') AS date)",
+  like: (param) => `ILIKE @${param}`,
 };
 
 // ---------------------------------------------------------------------------
@@ -160,10 +184,108 @@ async function createSqlite() {
   };
 }
 
-export const dbConfigured = () =>
-  env("DB_CLIENT") === "sqlite" || Boolean(env("DB_SERVER") && env("DB_USER"));
+/*
+ * PostgreSQL. The app's SQL uses PascalCase names (Users.FullName, …) unquoted,
+ * which Postgres stores in lower case. Queries run unchanged; only @name
+ * parameters become $1…, [Key]-style brackets are dropped, and result column
+ * names are restored to their PascalCase spelling so the rest of the app sees
+ * exactly what SQL Server returns.
+ */
+async function createPostgres() {
+  let pg;
+  try {
+    pg = (await import("pg")).default;
+  } catch (e) {
+    throw new Error("The 'pg' package is not installed. Run `npm install` in the project folder.");
+  }
+  // Return numbers as numbers and DATE as 'YYYY-MM-DD' (no timezone shifting)
+  pg.types.setTypeParser(20, (v) => Number(v)); // bigint (COUNT)
+  pg.types.setTypeParser(1700, (v) => Number(v)); // numeric / decimal
+  pg.types.setTypeParser(1082, (v) => v); // date
+  pg.types.setTypeParser(1114, (v) => new Date(v.replace(" ", "T") + "Z")); // timestamp (stored as UTC)
 
-export async function connectDb() {
-  if (env("DB_CLIENT") === "sqlite") return createSqlite();
+  const { PG_NAMES } = await import("./schema.mjs");
+  // Map lower-case result columns back to the spelling the SQL uses (FullName, openCount, n …).
+  const words = (text) =>
+    (text.replace(/'(?:[^']|'')*'/g, " ").replace(/@\w+/g, " ").match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) || []).filter((w) => /[a-z]/.test(w));
+  const names = new Map(); // from the schema: every table and column
+  const learn = (text) => {
+    for (const w of words(text)) if (!names.has(w.toLowerCase())) names.set(w.toLowerCase(), w);
+  };
+  learn(PG_NAMES);
+
+  const config = {
+    host: env("PGHOST", "localhost"),
+    port: Number(env("PGPORT", "5432")),
+    database: env("PGDATABASE", "ikonex"),
+    user: env("PGUSER", "postgres"),
+    password: env("PGPASSWORD"),
+    ssl: env("PGSSL", "false") === "true" ? { rejectUnauthorized: false } : false,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 15000,
+  };
+
+  if (env("DB_AUTO_CREATE", "true") === "true") {
+    const admin = new pg.Client({ ...config, database: env("PGADMIN_DATABASE", "postgres") });
+    await admin.connect();
+    const { rows } = await admin.query("SELECT 1 FROM pg_database WHERE datname = $1", [config.database]);
+    if (!rows.length) await admin.query(`CREATE DATABASE "${config.database.replace(/"/g, '""')}"`);
+    await admin.end();
+  }
+
+  const pool = new pg.Pool(config);
+  await pool.query("SELECT 1");
+
+  const translate = (text, params) => {
+    const order = [];
+    const sql = text
+      .replace(/\[([A-Za-z0-9_]+)\]/g, "$1")
+      .replace(/\bI?LIKE\b/gi, "ILIKE") // SQL Server LIKE ignores case; match that
+      .replace(/(?<![@\w])@([A-Za-z_]\w*)/g, (_, k) => {
+        let i = order.indexOf(k);
+        if (i < 0) i = order.push(k) - 1;
+        return "$" + (i + 1);
+      });
+    return { sql, values: order.map((k) => toParam(params[k])) };
+  };
+  const restorer = (text) => {
+    const local = new Map();
+    for (const w of words(text)) if (!local.has(w.toLowerCase())) local.set(w.toLowerCase(), w);
+    return (row) => {
+      const out = {};
+      for (const [k, v] of Object.entries(row)) out[local.get(k) || names.get(k) || k] = v;
+      return out;
+    };
+  };
+
+  return {
+    d: postgresDialect,
+    describe: `PostgreSQL ${config.host}:${config.port} / ${config.database}`,
+    pool,
+    async query(text, params = {}) {
+      const { sql, values } = translate(text, params);
+      const result = await pool.query(sql, values);
+      return (result.rows || []).map(restorer(text));
+    },
+    async exec(text) {
+      await pool.query(text);
+    },
+    async close() {
+      await pool.end();
+    },
+  };
+}
+
+export const dbClient = () => env("DB_CLIENT", "mssql").toLowerCase();
+
+export const dbConfigured = () =>
+  dbClient() === "sqlite" ||
+  (["postgres", "postgresql", "pg"].includes(dbClient()) && Boolean(env("PGUSER") || env("PGDATABASE"))) ||
+  Boolean(env("DB_SERVER") && env("DB_USER"));
+
+export async function connectDb(client = dbClient()) {
+  if (client === "sqlite") return createSqlite();
+  if (["postgres", "postgresql", "pg"].includes(client)) return createPostgres();
   return createMssql();
 }
