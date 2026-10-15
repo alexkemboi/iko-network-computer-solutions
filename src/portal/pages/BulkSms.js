@@ -123,7 +123,7 @@ const BulkSms = ({ query, navigate }) => {
       <PageHeader icon={FaSms} title="Bulk SMS" subtitle="Send one message to many customers through Africa's Talking." />
       {history.data?.ready === false && (
         <Notice tone="warn">
-          Bulk SMS isn't connected yet. Add <code>AT_USERNAME</code> and <code>AT_API_KEY</code> from your Africa's Talking account to <code>server/.env</code>, then restart the API.
+          Bulk SMS isn't connected yet. Add your Africa's Talking username and API key under <a href="#/app/integrations?tab=sms">Settings → Integrations</a>. No restart is needed.
         </Notice>
       )}
 

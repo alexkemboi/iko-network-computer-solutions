@@ -230,8 +230,7 @@ function Home() {
             inset: 0;
             z-index: -1;
             background:
-              radial-gradient(1000px 500px at 15% 0%, var(--brand-soft-2), transparent 60%),
-              radial-gradient(900px 500px at 100% 100%, var(--brand-soft), transparent 60%);
+              linear-gradient(180deg, var(--bg-alt), var(--bg) 70%);
           }
 
           .hero-container {
@@ -264,10 +263,10 @@ function Home() {
             max-width: 100%;
             padding: 6px 16px 6px 6px;
             border-radius: 999px;
-            background: var(--brand-soft);
-            border: 1px solid var(--brand-border);
+            background: var(--surface-solid);
+            border: 1px solid var(--border);
             margin-bottom: 22px;
-            color: var(--brand-text);
+            color: var(--text);
             font-size: .8rem;
             font-weight: 700;
             letter-spacing: .04em;
@@ -331,7 +330,8 @@ function Home() {
             max-width: 600px;
             border-radius: 26px;
             padding: 8px;
-            background: linear-gradient(145deg, var(--brand-soft-2), transparent 60%);
+            background: var(--bg-alt);
+            border: 1px solid var(--border);
           }
 
           .hero-image {

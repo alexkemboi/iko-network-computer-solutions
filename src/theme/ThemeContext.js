@@ -104,7 +104,11 @@ export const ThemeProvider = ({ children }) => {
       root.style.setProperty("--vt-x", `${x}px`);
       root.style.setProperty("--vt-y", `${y}px`);
       root.style.setProperty("--vt-r", `${radius}px`);
-      document.startViewTransition(commit);
+      // The browser skips the animation (rejecting these promises) when the tab
+      // is hidden; the theme itself is still applied, so the rejection is harmless.
+      const transition = document.startViewTransition(commit);
+      transition.ready.catch(() => {});
+      transition.finished.catch(() => {});
       return;
     }
 

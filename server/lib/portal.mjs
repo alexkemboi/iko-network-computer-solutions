@@ -23,7 +23,10 @@ import {
   clearCookie,
   SESSION_COOKIE,
 } from "./auth.mjs";
-import { smsConfig, smsReady, sendSms, b2cConfig, b2cMissing, sendB2c } from "./integrations.mjs";
+import { smsConfig, smsReady, sendSms, b2cConfig, b2cMissing, sendB2c, mpesaConfig, darajaToken } from "./integrations.mjs";
+import { integrationSettings, INTEGRATION_NAMES } from "./integration-settings.mjs";
+import { emailConfig, emailReady, sendEmail, verifyEmail, emailTroubleshooting } from "./mailer.mjs";
+import { ikokuraConfigured, listWorkspaces, getWorkspace } from "./ikokura.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const seedItems = JSON.parse(fs.readFileSync(path.join(__dirname, "catalog-seed.json"), "utf8"));
@@ -38,7 +41,9 @@ const PERMS = {
   payouts: ["admin"],
   users: ["admin"],
   settings: ["admin"],
+  integrations: ["admin"], // email / SMS / M-Pesa credentials
   messages: ["admin", "staff"],
+  workspaces: ["admin"], // Ikokura campaign workspaces
 };
 const can = (user, perm) => Boolean(user && PERMS[perm].includes(user.Role || user.role));
 
@@ -79,11 +84,20 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
   // instead of reporting "Database connection failed" until the next restart.
   let connecting = null;
   let retryDelay = 5000;
+  let integrationsError = null;
   const connect = () => (connecting ||= (async () => {
     try {
       db = await connectDb();
       await ensureSchema(db);
       repo = makeRepo(db);
+      // Load email/SMS/M-Pesa settings saved in the portal (falls back to server/.env)
+      try {
+        await integrationSettings.attach(repo, { dataDir });
+        integrationsError = null;
+      } catch (err) {
+        integrationsError = err.message;
+        console.error(`Integration settings unavailable: ${err.message}`);
+      }
       const seeded = await repo.seedCatalog(seedItems);
       dbError = null;
       retryDelay = 5000;
@@ -206,11 +220,36 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
       if (!repo) return false;
       try {
         await repo.createContact(message);
-        return true;
       } catch {
         return false;
       }
+      // Email the enquiry to the business (best effort; never blocks the visitor)
+      notifyEnquiry(message).catch((e) => console.error("Enquiry email not sent:", e.message));
+      return true;
     },
+  };
+
+  const oneLine = (v, max) => String(v || "").replace(/[\r\n]+/g, " ").trim().slice(0, max);
+  const notifyEnquiry = async (m) => {
+    if (!emailReady()) return;
+    const settings = await settingsWithDefaults();
+    const to = emailConfig().notifyTo || settings.business_email;
+    if (!EMAIL_RE.test(to || "")) return;
+    await sendEmail({
+      to,
+      replyTo: EMAIL_RE.test(m.email || "") ? m.email : undefined,
+      subject: `New website enquiry from ${oneLine(m.name, 80)}${m.service ? ` – ${oneLine(m.service, 80)}` : ""}`,
+      text: [
+        `Name: ${m.name}`,
+        m.email && `Email: ${m.email}`,
+        m.phone && `Phone: ${m.phone}`,
+        m.service && `Service: ${m.service}`,
+        "",
+        m.message,
+        "",
+        "— Sent by the IKONEX website contact form. Reply to this email to answer the enquirer.",
+      ].filter((line) => line !== undefined && line !== null && line !== false).join("\n"),
+    });
   };
 
   // =========================================================== bulk SMS
@@ -538,9 +577,10 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
       settings: await settingsWithDefaults(),
       integrations: {
         database: { connected: true, describe: db.describe },
-        mpesaExpress: { ready: !mpesaMissing().length, missing: mpesaMissing() },
+        mpesaExpress: { ready: !mpesaMissing().length, missing: mpesaMissing(), mode: mpesaConfig().mode },
         b2c: { ready: !b2cMissing().length, missing: b2cMissing(), shortcode: b2cConfig().shortcode, commandId: b2cConfig().commandId, maxAmount: b2cConfig().maxAmount },
         sms: { ready: smsReady(), username: sms.username, senderId: sms.senderId, sandbox: sms.sandbox },
+        email: { ready: emailReady(), missing: integrationSettings.check("email").missing, fromEmail: emailConfig().fromEmail },
       },
     });
   }, { perm: "settings" });
@@ -553,10 +593,141 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
     json(res, 200, { settings: await settingsWithDefaults() });
   }, { perm: "settings" });
 
+  // ---- integrations: email / SMS / M-Pesa credentials (admins only) ------------
+  const integrationName = (name) => {
+    if (!INTEGRATION_NAMES.includes(name)) throw httpError(404, "Unknown integration.");
+    if (integrationsError) throw httpError(503, `Integration settings are unavailable: ${integrationsError}`);
+    return name;
+  };
+  const integrationView = (name) => {
+    const view = integrationSettings.view(name);
+    if (name === "mpesa") view.notes = mpesaProblems().filter((p) => p.startsWith("Defined more than once"));
+    return view;
+  };
+  const allIntegrations = () => Object.fromEntries(INTEGRATION_NAMES.map((n) => [n, integrationView(n)]));
+
+  route("GET", "/api/portal/integrations", async ({ res }) => {
+    if (integrationsError) throw httpError(503, `Integration settings are unavailable: ${integrationsError}`);
+    json(res, 200, { integrations: allIntegrations(), audit: await integrationSettings.auditLog({ limit: 25 }) });
+  }, { perm: "integrations" });
+
+  route("GET", "/api/portal/integrations/audit", async ({ res, url }) => {
+    const integration = url.searchParams.get("integration") || undefined;
+    if (integration) integrationName(integration);
+    json(res, 200, { audit: await integrationSettings.auditLog({ integration, limit: url.searchParams.get("limit") || 50 }) });
+  }, { perm: "integrations" });
+
+  route("PUT", "/api/portal/integrations/:name", async ({ req, res, params, user }) => {
+    requireJson(req);
+    const name = integrationName(params.name);
+    const b = await readBody(req);
+    const { changed } = await integrationSettings.save(name, { values: b.values, clear: b.clear }, user);
+    if (changed.length) appendJsonl("audit.jsonl", { event: "integration_updated", integration: name, by: user.Id, fields: changed });
+    json(res, 200, { changed, integration: integrationView(name) });
+  }, { perm: "integrations" });
+
+  const TESTS = {
+    async email(b, user) {
+      const to = String(b.to || user.Email || "").trim();
+      if (!EMAIL_RE.test(to)) throw httpError(400, "Enter the email address to send the test to.");
+      await verifyEmail();
+      const sent = await sendEmail({
+        to,
+        subject: "IKONEX test email",
+        text: `This is a test email from the IKONEX portal, sent by ${user.FullName} at ${new Date().toUTCString()}.\n\nIf you can read this, outgoing email is working.`,
+      });
+      if (sent.rejected.length) throw httpError(502, `The server refused the recipient ${to}.`);
+      return `Test email sent to ${to}. Check that inbox (and the spam folder).`;
+    },
+    async sms(b) {
+      const phone = normalisePhone(b.to);
+      if (!phone) throw httpError(400, "Enter a valid Safaricom number to send the test SMS to.");
+      const { recipients } = await sendSms({ to: [phone], message: "IKONEX: this is a test message from your SMS settings." });
+      const r = recipients[0];
+      if (!r || ![100, 101, 102].includes(Number(r.statusCode)))
+        throw httpError(502, `Africa's Talking did not accept the message${r?.status ? `: ${r.status}` : ""}.`);
+      return `Test SMS accepted for +${phone}${r.cost ? ` (cost ${r.cost})` : ""}. It should arrive within a minute.`;
+    },
+    async mpesa() {
+      const m = mpesaConfig();
+      await darajaToken({ oauthUrl: m.urls.oauth, consumerKey: m.consumerKey, consumerSecret: m.consumerSecret });
+      const parts = [`Daraja (${m.mode}) accepted the consumer key and secret.`];
+      const b2c = b2cConfig();
+      if (!b2cMissing().length && (b2c.consumerKey !== m.consumerKey || b2c.oauthUrl !== m.urls.oauth)) {
+        await darajaToken(b2c);
+        parts.push("The B2C keys were accepted too.");
+      }
+      parts.push("The passkey and short code are checked by Safaricom on the first payment; run `npm run mpesa:check -- 07XXXXXXXX` on the server for a KES 1 end-to-end test.");
+      return parts.join(" ");
+    },
+  };
+
+  const testTip = (name, err) => {
+    const m = `${err.message} ${err.httpStatus || ""}`;
+    if (name === "email") return emailTroubleshooting(err);
+    if (name === "sms") {
+      if (/401|authenticat|invalid api ?key|the supplied authentication is invalid/i.test(m))
+        return "The username or API key is wrong, or the key belongs to the other environment (sandbox keys don't work live).";
+      if (/InvalidSenderId|sender/i.test(m)) return "The sender ID isn't approved for this account. Clear it to use the shared short code.";
+      if (/InsufficientBalance|balance/i.test(m)) return "Top up the Africa's Talking account balance.";
+      if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT/i.test(m)) return "The server couldn't reach Africa's Talking. Check its internet access and the API endpoint.";
+    }
+    if (name === "mpesa") {
+      if (/HTTP 40[01]/.test(m)) return "Use the consumer key and secret of the Daraja app for the selected environment — sandbox keys are rejected in production and vice versa.";
+      if (/fetch failed|ENOTFOUND|ECONNREFUSED|ETIMEDOUT/i.test(m)) return "The server couldn't reach Safaricom. Check its internet access and firewall.";
+    }
+    return null;
+  };
+
+  route("POST", "/api/portal/integrations/:name/test", async ({ req, res, params, user }) => {
+    requireJson(req);
+    const name = integrationName(params.name);
+    if (rateLimited(`integration-test:${user.Id}`, 10, 10 * 60 * 1000)) throw httpError(429, "Too many tests. Wait a few minutes and try again.");
+    const check = integrationSettings.check(name);
+    if (!check.configured) {
+      throw httpError(400, `Finish the setup before testing: ${[...check.missing.map((x) => `${x} is required`), ...check.errors].join("; ")}.`);
+    }
+    const b = await readBody(req);
+    let ok = true;
+    let message;
+    let tip = null;
+    try {
+      message = await TESTS[name](b, user);
+    } catch (err) {
+      if (err.status === 400) throw err; // bad input, not a connection result
+      ok = false;
+      message = integrationSettings.redact(name, err.message || "The test failed.");
+      tip = testTip(name, err);
+    }
+    await integrationSettings.recordTest(name, { ok, message }, user);
+    json(res, 200, { ok, message, tip, integration: integrationView(name) });
+  }, { perm: "integrations" });
+
   // ---- contact messages ----------------------------------------------------
   route("GET", "/api/portal/messages", async ({ res, url }) => {
     json(res, 200, await repo.listContacts(pageParams(url)));
   }, { perm: "messages" });
+
+  // ---- Ikokura campaign workspaces (read-only) ----------------------------
+  const requireIkokura = () => {
+    if (!ikokuraConfigured()) throw httpError(503, "Ikokura isn't connected. Set IKOKURA_DATABASE_URL in server/.env.");
+  };
+  route("GET", "/api/portal/workspaces", async ({ res, url }) => {
+    requireIkokura();
+    const p = pageParams(url);
+    json(res, 200, await listWorkspaces({
+      search: p.search,
+      status: p.status,
+      page: Math.max(1, Number(p.page) || 1),
+      pageSize: Math.min(100, Math.max(1, Number(p.pageSize) || 20)),
+    }));
+  }, { perm: "workspaces" });
+  route("GET", "/api/portal/workspaces/:id", async ({ res, params }) => {
+    requireIkokura();
+    const workspace = await getWorkspace(params.id);
+    if (!workspace) throw httpError(404, "Workspace not found.");
+    json(res, 200, { workspace });
+  }, { perm: "workspaces" });
 
   // ---- bulk SMS ----------------------------------------------------------
   route("GET", "/api/portal/sms", async ({ res, url }) => {
@@ -576,7 +747,7 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
   }, { perm: "sendSms" });
   route("POST", "/api/portal/sms", async ({ req, res, user }) => {
     requireJson(req);
-    if (!smsReady()) throw httpError(503, "Bulk SMS isn't set up yet: add AT_USERNAME and AT_API_KEY to server/.env.");
+    if (!smsReady()) throw httpError(503, "Bulk SMS isn't set up yet: add the Africa's Talking username and API key under Settings → Integrations → SMS.");
     const b = await readBody(req);
     const settings = await settingsWithDefaults();
     const body = String(b.message || "").trim();
@@ -627,7 +798,7 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
   route("POST", "/api/portal/payouts/:id/approve", async ({ req, res, params, user }) => {
     requireJson(req);
     const missingB2c = b2cMissing();
-    if (missingB2c.length) throw httpError(503, `M-Pesa B2C isn't set up: add ${missingB2c.join(", ")} to server/.env.`);
+    if (missingB2c.length) throw httpError(503, `M-Pesa B2C isn't set up. Under Settings → Integrations → M-Pesa, add: ${missingB2c.join(", ")}.`);
     const b = await readBody(req);
     const batch = await repo.getBatch(Number(params.id));
     if (!batch) throw httpError(404, "Batch not found.");
@@ -653,7 +824,7 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
 
   // ---- provider callbacks (public, secret-protected) ------------------------
   const secretOk = (given) => {
-    const s = process.env.MPESA_CALLBACK_SECRET;
+    const s = mpesaConfig().callbackSecret;
     return !s || given === s;
   };
   const b2cCallback = (kind) => async ({ req, res, params }) => {
@@ -700,6 +871,7 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
 
   // ---- dispatcher ------------------------------------------------------------
   let mpesaMissing = () => [];
+  let mpesaProblems = () => [];
   const handles = (pathname) =>
     pathname.startsWith("/api/auth/") ||
     pathname.startsWith("/api/portal/") ||
@@ -753,6 +925,9 @@ export function createPortal({ dataDir, send, readBody, clientIp, rateLimited, n
     hooks,
     setMpesaMissing: (fn) => {
       mpesaMissing = fn;
+    },
+    setMpesaProblems: (fn) => {
+      mpesaProblems = fn;
     },
   };
 }

@@ -15,8 +15,11 @@ module.exports = function setupProxy(app) {
   process.env.IKONEX_API_EMBEDDED = "1"; // mount inside the dev server, don't open a port
   const modulePath = pathToFileURL(path.join(__dirname, "..", "server", "mpesa-server.mjs")).href;
   const apiReady = import(modulePath).then((api) => {
-    // eslint-disable-next-line no-console
-    console.log(`\n  IKONEX API mounted at /api — M-Pesa Express: ${api.mpesaReadiness()}\n`);
+    // Report once the database (and the settings saved in the portal) has loaded
+    api.ready.finally(() => {
+      // eslint-disable-next-line no-console
+      console.log(`\n  IKONEX API mounted at /api — M-Pesa Express: ${api.mpesaReadiness()}\n`);
+    });
     return api;
   });
 

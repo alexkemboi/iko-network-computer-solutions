@@ -105,6 +105,15 @@ const STATUS = {
   completed_with_errors: ["warn", FaExclamationTriangle, "Completed with errors"],
   active: ["good", FaCheckCircle, "Active"],
   inactive: ["neutral", FaBan, "Inactive"],
+  // Ikokura workspaces, subscriptions and campaigns
+  suspended: ["bad", FaBan, "Suspended"],
+  closed: ["neutral", FaBan, "Closed"],
+  trialing: ["info", FaClock, "Trial"],
+  past_due: ["warn", FaExclamationTriangle, "Past due"],
+  canceled: ["neutral", FaBan, "Canceled"],
+  expired: ["bad", FaTimesCircle, "Expired"],
+  setup: ["info", FaSyncAlt, "Setting up"],
+  archived: ["neutral", FaCircle, "Archived"],
 };
 export const StatusBadge = ({ status }) => {
   const key = String(status || "").toLowerCase();

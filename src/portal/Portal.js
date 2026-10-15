@@ -16,6 +16,8 @@ const BulkPayments = lazy(() => import("./pages/BulkPayments"));
 const Catalog = lazy(() => import("./pages/Catalog"));
 const Users = lazy(() => import("./pages/Users"));
 const Settings = lazy(() => import("./pages/Settings"));
+const Integrations = lazy(() => import("./pages/Integrations"));
+const Workspaces = lazy(() => import("./pages/Workspaces"));
 const Profile = lazy(() => import("./pages/Profile"));
 
 const ALL = ["admin", "staff", "customer"];
@@ -32,8 +34,10 @@ const ROUTES = [
   { path: "/app/products", roles: STAFF, title: "Products", render: (p) => <Catalog key="product" kind="product" {...p} /> },
   { path: "/app/services", roles: STAFF, title: "Services", render: (p) => <Catalog key="service" kind="service" {...p} /> },
   { path: "/app/payouts", roles: ADMIN, title: "Bulk Payments", render: (p) => <BulkPayments {...p} /> },
+  { path: "/app/workspaces", roles: ADMIN, title: "Campaign workspaces", render: (p) => <Workspaces {...p} /> },
   { path: "/app/users", roles: ADMIN, title: "Users", render: (p) => <Users {...p} /> },
   { path: "/app/settings", roles: ADMIN, title: "Settings", render: (p) => <Settings {...p} /> },
+  { path: "/app/integrations", roles: ADMIN, title: "Integrations", render: (p) => <Integrations {...p} /> },
 ];
 
 const Splash = () => (

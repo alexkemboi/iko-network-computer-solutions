@@ -6,22 +6,29 @@
  *   npm run mpesa:check -- 0712345678       → also sends a real KES 1 PIN prompt to that phone
  *   npm run mpesa:check -- 0712345678 10    → same, KES 10
  *
- * Secrets are never printed in full.
+ * Secret values are never printed (only whether they are set and their length).
  */
 // Load the API module without starting its HTTP server
 process.env.IKONEX_API_EMBEDDED = "1";
 const {
-  cfg,
-  missing,
-  configProblems,
+  missing: missingNow,
+  configProblems: problemsNow,
+  ready,
   getToken,
   darajaPost,
   password,
   darajaTimestamp,
   normalisePhone,
 } = await import("./mpesa-server.mjs");
+const { mpesaConfig } = await import("./lib/integrations.mjs");
 
-const mask = (v) => (v ? `${v.slice(0, 3)}…${v.slice(-2)} (${v.length} chars)` : "(empty)");
+// Wait (briefly) for the database so settings saved in the portal are used too
+await Promise.race([ready, new Promise((resolve) => setTimeout(resolve, 8000).unref())]);
+const cfg = mpesaConfig();
+const missing = missingNow();
+const configProblems = problemsNow();
+
+const mask = (v) => (v ? `set (${v.length} chars)` : "(empty)");
 const ok = (m) => console.log(`  ✔ ${m}`);
 const bad = (m) => console.log(`  ✘ ${m}`);
 const warn = (m) => console.log(`  ⚠ ${m}`);
@@ -44,7 +51,7 @@ console.log(`  Callback URL      ${cfg.callbackUrl || "(empty)"}${cfg.callbackSe
 let failed = false;
 
 if (missing.length) {
-  bad(`Missing or placeholder values in server/.env: ${missing.join(", ")}`);
+  bad(`Missing settings (portal or server/.env): ${missing.join(", ")}`);
   failed = true;
 }
 for (const p of configProblems) warn(p);

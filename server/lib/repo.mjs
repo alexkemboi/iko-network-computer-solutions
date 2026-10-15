@@ -519,6 +519,56 @@ export const makeRepo = (db) => {
       await q(`INSERT INTO Settings ([Key], [Value], UpdatedAt) VALUES (@key, @value, ${d.now})`, { key, value });
     },
 
+    // ---------------------------------------------------- integration settings
+    async getIntegrationConfigs() {
+      return q(`SELECT c.Integration, c.ConfigJson, c.SecretsEnc, c.LastTestAt, c.LastTestOk, c.LastTestMessage,
+                       c.LastSuccessAt, c.UpdatedAt, u.FullName AS UpdatedByName
+                FROM IntegrationConfigs c LEFT JOIN Users u ON u.Id = c.UpdatedBy`);
+    },
+    async saveIntegrationConfig({ integration, configJson, secretsEnc, userId }) {
+      const params = { integration, configJson, secretsEnc, userId };
+      const exists = one(await q("SELECT Integration FROM IntegrationConfigs WHERE Integration=@integration", { integration }));
+      if (exists) {
+        await q(`UPDATE IntegrationConfigs SET ConfigJson=@configJson, SecretsEnc=@secretsEnc, UpdatedAt=${d.now}, UpdatedBy=@userId
+                 WHERE Integration=@integration`, params);
+      } else {
+        await q(`INSERT INTO IntegrationConfigs (Integration, ConfigJson, SecretsEnc, UpdatedAt, UpdatedBy)
+                 VALUES (@integration, @configJson, @secretsEnc, ${d.now}, @userId)`, params);
+      }
+    },
+    async recordIntegrationTest({ integration, ok, message }) {
+      const params = { integration, ok: ok ? 1 : 0, message };
+      const success = ok ? `, LastSuccessAt=${d.now}` : "";
+      const exists = one(await q("SELECT Integration FROM IntegrationConfigs WHERE Integration=@integration", { integration }));
+      if (exists) {
+        await q(`UPDATE IntegrationConfigs SET LastTestAt=${d.now}, LastTestOk=@ok, LastTestMessage=@message${success}
+                 WHERE Integration=@integration`, params);
+      } else {
+        await q(`INSERT INTO IntegrationConfigs (Integration, LastTestAt, LastTestOk, LastTestMessage, LastSuccessAt)
+                 VALUES (@integration, ${d.now}, @ok, @message, ${ok ? d.now : "NULL"})`, params);
+      }
+    },
+    async addIntegrationAudit({ integration, action, fields, detail, userId, userEmail }) {
+      await q(d.insert("IntegrationAudit", ["Integration", "EventType", "Fields", "Detail", "UserId", "UserEmail"]), {
+        Integration: integration,
+        EventType: action,
+        Fields: fields || null,
+        Detail: detail || null,
+        UserId: userId ?? null,
+        UserEmail: userEmail || null,
+      });
+    },
+    async listIntegrationAudit({ integration, limit }) {
+      const where = integration ? "WHERE a.Integration=@integration" : "";
+      const rows = await q(
+        `SELECT ${d.top(limit)} a.Id, a.Integration, a.EventType, a.Fields, a.Detail, a.UserEmail, a.CreatedAt, u.FullName AS UserName
+         FROM IntegrationAudit a LEFT JOIN Users u ON u.Id = a.UserId ${where}
+         ORDER BY a.CreatedAt DESC, a.Id DESC ${d.limit(limit)}`,
+        { integration }
+      );
+      return rows.map(clean);
+    },
+
     // ---------------------------------------------------------------- contact
     async createContact(m) {
       await q(d.insert("ContactMessages", ["Name", "Email", "Phone", "Service", "Message"]), {

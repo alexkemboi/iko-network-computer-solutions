@@ -16,14 +16,14 @@
 }
 
 [data-theme="light"] {
-  --cream: #f7f2e6;
-  --cream-soft: #fbf8f1;
-  --cream-border: #ece3cf;
-  --media-bg-1: #e3f4ea;
-  --media-bg-2: #f5f0e3;
-  --media-ink: rgba(21, 128, 61, 0.14);
-  --media-tile: rgba(255, 255, 255, 0.75);
-  --media-tile-border: rgba(255, 255, 255, 0.9);
+  --cream: #f5f7f8;
+  --cream-soft: #f8fafb;
+  --cream-border: #e2e8f0;
+  --media-bg-1: #f5f7f8;
+  --media-bg-2: #eef6f1;
+  --media-ink: rgba(23, 32, 51, 0.06);
+  --media-tile: #ffffff;
+  --media-tile-border: #e2e8f0;
 }
 
 /* ---------- Section tones (each section gets its own character) ---------- */
@@ -33,8 +33,8 @@
 }
 
 [data-theme="light"] .tone-cream {
-  --media-bg-1: #f7f0de;
-  --media-bg-2: #e6f3ea;
+  --media-bg-1: #f5f7f8;
+  --media-bg-2: #eef6f1;
 }
 
 .tone-slate {
@@ -43,8 +43,8 @@
 }
 
 [data-theme="light"] .tone-slate {
-  --media-bg-1: #e8f0ef;
-  --media-bg-2: #eef4f8;
+  --media-bg-1: #f3f5f8;
+  --media-bg-2: #eef2f6;
 }
 
 .tone-night {
@@ -53,8 +53,8 @@
 }
 
 [data-theme="light"] .tone-night {
-  --media-bg-1: #dff3ea;
-  --media-bg-2: #e9eef7;
+  --media-bg-1: #f3f5f8;
+  --media-bg-2: #edf5f0;
 }
 
 /* ---------- Section toolbar (filters + controls) ---------- */
@@ -112,7 +112,7 @@
 .ix-tab[aria-pressed="true"] {
   background: var(--surface-solid);
   color: var(--brand-text);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .ix-tab__count {
@@ -191,6 +191,7 @@
   margin-bottom: 22px;
   overflow: hidden;
   background: linear-gradient(140deg, var(--media-bg-1), var(--media-bg-2));
+  border-bottom: 1px solid var(--border);
   isolation: isolate;
 }
 
@@ -217,7 +218,8 @@
   top: 50%;
   transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: radial-gradient(circle, var(--brand-soft-2), transparent 65%);
+  background: radial-gradient(circle, var(--brand-soft), transparent 65%);
+  opacity: 0.7;
 }
 
 .ix-media__tile {
@@ -226,14 +228,15 @@
   top: 50%;
   display: grid;
   place-items: center;
-  width: 76px;
-  height: 76px;
-  border-radius: 24px;
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
   transform: translate(-50%, -50%);
-  background: var(--gradient-brand);
-  color: var(--on-brand);
-  font-size: 2rem;
-  box-shadow: var(--shadow-brand), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: var(--media-tile);
+  border: 1px solid var(--media-tile-border);
+  color: var(--brand-text);
+  font-size: 1.85rem;
+  box-shadow: var(--shadow-md);
   transition: transform 0.6s var(--ease);
 }
 
@@ -250,7 +253,7 @@
   border-radius: 13px;
   background: var(--media-tile);
   border: 1px solid var(--media-tile-border);
-  color: var(--brand-text);
+  color: var(--text-muted);
   font-size: 0.95rem;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -476,10 +479,10 @@
 }
 
 .ix-arrow:hover:not(:disabled) {
-  background: var(--gradient-brand);
-  border-color: transparent;
-  color: var(--on-brand);
-  transform: scale(1.06);
+  background: var(--surface-hover);
+  border-color: var(--brand-border);
+  color: var(--brand-text);
+  transform: scale(1.04);
 }
 
 .ix-arrow:disabled {
@@ -611,7 +614,7 @@
 
 .ix-modal__close:hover {
   transform: rotate(90deg);
-  background: var(--brand-soft);
+  background: var(--surface-hover);
 }
 
 .ix-modal__body {
@@ -864,6 +867,65 @@ select.ix-input {
 
 .ix-actions .ix-card-actions__order:hover {
   box-shadow: var(--shadow-brand);
+}
+
+/* ---------- Product and company names are set in capitals ---------- */
+.product-showcase-card .ix-card__title,
+.product-clients button,
+.portfolio-project__title,
+.portfolio-project__client strong,
+.client-tile__copy strong {
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Pill filters (products, portfolio) ---------- */
+.products-filter {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -22px 0 32px;
+}
+
+.products-filter button {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-solid);
+  color: var(--text-muted);
+  padding: 8px 16px;
+  font: 600 0.82rem var(--font-sans);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.products-filter button:hover {
+  border-color: var(--border-strong);
+  color: var(--heading);
+}
+
+.products-filter button.is-active {
+  border-color: var(--brand-border);
+  background: var(--brand-soft);
+  color: var(--brand-text);
+}
+
+@media (max-width: 767px) {
+  .products-filter {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .products-filter::-webkit-scrollbar {
+    display: none;
+  }
+
+  .products-filter button {
+    flex: none;
+  }
 }
 
 .ix-card-actions__order svg {

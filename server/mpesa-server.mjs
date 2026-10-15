@@ -16,15 +16,19 @@
  *   POST /api/contact
  *   GET  /api/health
  *
- * Configure in server/.env (see server/.env.example), then:  node server/mpesa-server.mjs
+ * Configure M-Pesa in the portal (Settings → Integrations) or in server/.env
+ * (see server/env.example.txt), then:  node server/mpesa-server.mjs
  * Daraja keys and the passkey must ONLY live on the server — never in the React app.
  */
 
+import crypto from "node:crypto";
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPortal } from "./lib/portal.mjs";
+import { mpesaConfig, mpesaMissing, darajaToken } from "./lib/integrations.mjs";
+import { integrationSettings } from "./lib/integration-settings.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -55,78 +59,29 @@ if (fs.existsSync(envFile)) {
 
 const env = (k, d = "") => (process.env[k] || d).trim();
 
-const PRODUCTION_URLS = {
-  oauth: "https://api.safaricom.co.ke/oauth/v1/generate",
-  stkPush: "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-  stkQuery: "https://api.safaricom.co.ke/mpesa/stkpushquery/v1/query",
-};
-const SANDBOX_URLS = {
-  oauth: "https://sandbox.safaricom.co.ke/oauth/v1/generate",
-  stkPush: "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-  stkQuery: "https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query",
-};
-
-const mode = env("MPESA_ENV", "production") === "sandbox" ? "sandbox" : "production";
-const defaults = mode === "sandbox" ? SANDBOX_URLS : PRODUCTION_URLS;
-
+// HTTP server settings (fixed for the life of the process)
 const cfg = {
   port: Number(env("PORT", "5050")),
   host: env("HOST", "127.0.0.1"),
   allowedOrigin: env("ALLOWED_ORIGIN", "*"),
   trustProxy: env("TRUST_PROXY", "true") === "true",
-  mode,
-  urls: {
-    oauth: env("MPESA_OAUTH_URL", defaults.oauth),
-    stkPush: env("MPESA_STKPUSH_URL", defaults.stkPush),
-    stkQuery: env("MPESA_STKQUERY_URL", defaults.stkQuery),
-  },
-  consumerKey: env("MPESA_CONSUMER_KEY"),
-  consumerSecret: env("MPESA_CONSUMER_SECRET"),
-  shortcode: env("MPESA_SHORTCODE"),
-  passkey: env("MPESA_PASSKEY"),
-  // CustomerPayBillOnline (Paybill) or CustomerBuyGoodsOnline (Till)
-  transactionType: env("MPESA_TRANSACTION_TYPE", "CustomerPayBillOnline"),
-  // Paybill: same as shortcode. Buy Goods: your Till number.
-  partyB: env("MPESA_PARTY_B") || env("MPESA_SHORTCODE"),
-  callbackUrl: env("MPESA_CALLBACK_URL"),
-  callbackSecret: env("MPESA_CALLBACK_SECRET"),
-  accountReference: env("MPESA_ACCOUNT_REFERENCE"), // optional fixed account ref (Paybill)
-  maxAmount: Number(env("MPESA_MAX_AMOUNT", "250000")),
 };
 
-const PLACEHOLDER = /^(undefined|null|none|xxx+|changeme|your[_-].*|<.*>)$/i;
+// M-Pesa settings are read on every request (mpesaConfig()), so changes saved in
+// the portal apply to the next payment without a restart.
+export const missing = () => mpesaMissing();
 
-const ENV_NAMES = {
-  consumerKey: "MPESA_CONSUMER_KEY",
-  consumerSecret: "MPESA_CONSUMER_SECRET",
-  shortcode: "MPESA_SHORTCODE",
-  passkey: "MPESA_PASSKEY",
-  callbackUrl: "MPESA_CALLBACK_URL",
-  partyB: "MPESA_PARTY_B",
+/** Configuration problems, reported at startup, on /api/health and in the portal. */
+export const configProblems = () => {
+  const { errors, warnings } = integrationSettings.check("mpesa");
+  const out = [...errors, ...warnings.filter((w) => !/callback secret/i.test(w))];
+  if (envDuplicates.length)
+    out.push(`Defined more than once in server/.env (the LAST value is used): ${[...new Set(envDuplicates)].join(", ")}.`);
+  return out;
 };
-
-// Values that are empty or obviously placeholders count as missing
-const missing = ["consumerKey", "consumerSecret", "shortcode", "passkey", "callbackUrl"]
-  .filter((k) => !cfg[k] || PLACEHOLDER.test(cfg[k]))
-  .map((k) => ENV_NAMES[k]);
-
-// Other configuration problems (reported at startup and on /api/health)
-export const configProblems = [];
-if (cfg.shortcode && !/^\d{5,7}$/.test(cfg.shortcode))
-  configProblems.push("MPESA_SHORTCODE should be 5–7 digits.");
-if (cfg.passkey && !PLACEHOLDER.test(cfg.passkey) && cfg.passkey.length < 30)
-  configProblems.push("MPESA_PASSKEY looks too short — the Lipa Na M-Pesa passkey is a long string (usually 64 characters) from Safaricom's go-live email.");
-if (!["CustomerPayBillOnline", "CustomerBuyGoodsOnline"].includes(cfg.transactionType))
-  configProblems.push("MPESA_TRANSACTION_TYPE must be CustomerPayBillOnline or CustomerBuyGoodsOnline.");
-if (cfg.transactionType === "CustomerBuyGoodsOnline" && (!env("MPESA_PARTY_B") || env("MPESA_PARTY_B") === cfg.shortcode))
-  configProblems.push("Till (Buy Goods): set MPESA_PARTY_B to your Till number and MPESA_SHORTCODE to the Store/HO number.");
-if (cfg.callbackUrl && !/^https:\/\//.test(cfg.callbackUrl))
-  configProblems.push("MPESA_CALLBACK_URL must start with https:// (Safaricom only calls HTTPS URLs).");
-if (envDuplicates.length)
-  configProblems.push(`Defined more than once in server/.env (the LAST value is used): ${[...new Set(envDuplicates)].join(", ")}.`);
 
 // ---- storage / logging ------------------------------------------------------
-const dataDir = path.join(__dirname, "data");
+const dataDir = process.env.IKONEX_DATA_DIR || path.join(__dirname, "data");
 fs.mkdirSync(dataDir, { recursive: true });
 
 const appendJsonl = (file, obj) =>
@@ -205,7 +160,7 @@ export const normalisePhone = (input) => {
 export const darajaTimestamp = (now = Date.now()) =>
   new Date(now + 3 * 60 * 60 * 1000).toISOString().replace(/[-:T]/g, "").slice(0, 14);
 
-const password = (ts) => Buffer.from(`${cfg.shortcode}${cfg.passkey}${ts}`).toString("base64");
+const password = (ts, m = mpesaConfig()) => Buffer.from(`${m.shortcode}${m.passkey}${ts}`).toString("base64");
 
 // Simple sliding-window rate limiter (prevents prompt-spamming a phone)
 const hits = new Map();
@@ -222,30 +177,27 @@ const rateLimited = (key, limit, windowMs) => {
 };
 
 // ---- Daraja client --------------------------------------------------------
-let tokenCache = { token: null, expires: 0 };
+// Cached per credential set: replacing the keys in the portal invalidates it at once
+let tokenCache = { token: null, expires: 0, key: "" };
+const credentialKey = (m) =>
+  crypto.createHash("sha256").update(`${m.urls.oauth}|${m.consumerKey}|${m.consumerSecret}`).digest("hex");
 
-const getToken = async () => {
-  if (tokenCache.token && Date.now() < tokenCache.expires) return tokenCache.token;
-  const auth = Buffer.from(`${cfg.consumerKey}:${cfg.consumerSecret}`).toString("base64");
-  const r = await fetch(`${cfg.urls.oauth}?grant_type=client_credentials`, {
-    headers: { Authorization: `Basic ${auth}` },
-  });
-  const text = await r.text();
-  let j = {};
+const getToken = async (m = mpesaConfig()) => {
+  const key = credentialKey(m);
+  if (tokenCache.token && tokenCache.key === key && Date.now() < tokenCache.expires) return tokenCache.token;
+  let result;
   try {
-    j = JSON.parse(text);
-  } catch {
-    /* Daraja sometimes returns empty/HTML on bad credentials */
-  }
-  if (!r.ok || !j.access_token) {
-    console.error("Daraja OAuth failed", r.status, text.slice(0, 300));
+    result = await darajaToken({ oauthUrl: m.urls.oauth, consumerKey: m.consumerKey, consumerSecret: m.consumerSecret });
+  } catch (err) {
+    console.error("Daraja OAuth failed", err.httpStatus || "");
     throw Object.assign(new Error("M-Pesa authentication failed. Check the consumer key and secret."), {
       status: 502,
     });
   }
   tokenCache = {
-    token: j.access_token,
-    expires: Date.now() + Math.max(60, Number(j.expires_in || 3599) - 60) * 1000,
+    token: result.token,
+    expires: Date.now() + Math.max(60, result.expiresIn - 60) * 1000,
+    key,
   };
   return tokenCache.token;
 };
@@ -258,7 +210,7 @@ const darajaPost = async (url, body) => {
     body: JSON.stringify(body),
   });
   const j = await r.json().catch(() => ({}));
-  if (r.status === 401) tokenCache = { token: null, expires: 0 };
+  if (r.status === 401) tokenCache = { token: null, expires: 0, key: "" };
   if (!r.ok || (j.ResponseCode !== undefined && String(j.ResponseCode) !== "0")) {
     const msg = j.errorMessage || j.ResponseDescription || j.CustomerMessage || `M-Pesa error (${r.status})`;
     // Problems with OUR merchant setup (keys, passkey, shortcode, callback)
@@ -278,9 +230,9 @@ const darajaPost = async (url, body) => {
   return j;
 };
 
-const callbackUrlWithSecret = () => {
-  if (!cfg.callbackSecret) return cfg.callbackUrl;
-  return `${cfg.callbackUrl.replace(/\/+$/, "")}/${encodeURIComponent(cfg.callbackSecret)}`;
+const callbackUrlWithSecret = (m = mpesaConfig()) => {
+  if (!m.callbackSecret) return m.callbackUrl;
+  return `${m.callbackUrl.replace(/\/+$/, "")}/${encodeURIComponent(m.callbackSecret)}`;
 };
 
 const RESULT_STATUS = (code) => {
@@ -310,12 +262,15 @@ const portal = createPortal({
   appendJsonl,
   corsHeaders,
 });
-portal.setMpesaMissing(() => missing);
+portal.setMpesaMissing(missing);
+portal.setMpesaProblems(configProblems);
 
 const stkPush = async (req, res) => {
-  if (missing.length) {
+  const m = mpesaConfig();
+  const missingNow = missing();
+  if (missingNow.length) {
     return send(res, 503, {
-      error: `M-Pesa is not configured on the server (missing: ${missing.join(", ")}).`,
+      error: `M-Pesa is not configured on the server (missing: ${missingNow.join(", ")}).`,
     });
   }
 
@@ -325,9 +280,9 @@ const stkPush = async (req, res) => {
   const amount = await portal.hooks.priceFor(body.description, Number(body.amount));
 
   if (!phone) return send(res, 400, { error: "Enter a valid Safaricom number, e.g. 0712 345 678." });
-  if (!Number.isInteger(amount) || amount < 1 || amount > cfg.maxAmount) {
+  if (!Number.isInteger(amount) || amount < 1 || amount > m.maxAmount) {
     return send(res, 400, {
-      error: `Amount must be a whole number between 1 and ${cfg.maxAmount.toLocaleString()} KES.`,
+      error: `Amount must be a whole number between 1 and ${m.maxAmount.toLocaleString()} KES.`,
     });
   }
 
@@ -340,7 +295,7 @@ const stkPush = async (req, res) => {
 
   const ts = darajaTimestamp();
   const reference =
-    (cfg.accountReference || String(body.reference || "IKONEX"))
+    (m.accountReference || String(body.reference || "IKONEX"))
       .replace(/[^A-Za-z0-9-]/g, "")
       .slice(0, 12) || "IKONEX";
   const desc =
@@ -354,16 +309,16 @@ const stkPush = async (req, res) => {
 
   let result;
   try {
-    result = await darajaPost(cfg.urls.stkPush, {
-    BusinessShortCode: cfg.shortcode,
-    Password: password(ts),
+    result = await darajaPost(m.urls.stkPush, {
+    BusinessShortCode: m.shortcode,
+    Password: password(ts, m),
     Timestamp: ts,
-    TransactionType: cfg.transactionType,
+    TransactionType: m.transactionType,
     Amount: amount,
     PartyA: phone,
-    PartyB: cfg.partyB,
+    PartyB: m.partyB,
     PhoneNumber: phone,
-    CallBackURL: callbackUrlWithSecret(),
+    CallBackURL: callbackUrlWithSecret(m),
     AccountReference: reference,
     TransactionDesc: desc,
     });
@@ -404,7 +359,8 @@ const stkPush = async (req, res) => {
 
 const callback = async (req, res, secret) => {
   // Always ACK Safaricom quickly, even if we ignore the payload.
-  if (cfg.callbackSecret && secret !== cfg.callbackSecret) {
+  const { callbackSecret } = mpesaConfig();
+  if (callbackSecret && secret !== callbackSecret) {
     console.warn("Rejected callback with wrong/missing secret from", clientIp(req));
     return send(res, 200, { ResultCode: 0, ResultDesc: "Accepted" });
   }
@@ -470,7 +426,7 @@ const status = async (_req, res, id) => {
     payments.set(id, known);
   }
   if (known.status !== "pending") return send(res, 200, statusPayload(known));
-  if (missing.length) return send(res, 200, { status: "pending" });
+  if (missing().length) return send(res, 200, { status: "pending" });
 
   // Callback not in yet — ask Daraja directly, but not more than every 8s
   // (STK Query is rate-limited) and only after the customer had time to act.
@@ -482,9 +438,10 @@ const status = async (_req, res, id) => {
 
   try {
     const ts = darajaTimestamp();
-    const q = await darajaPost(cfg.urls.stkQuery, {
-      BusinessShortCode: cfg.shortcode,
-      Password: password(ts),
+    const m = mpesaConfig();
+    const q = await darajaPost(m.urls.stkQuery, {
+      BusinessShortCode: m.shortcode,
+      Password: password(ts, m),
       Timestamp: ts,
       CheckoutRequestID: id,
     });
@@ -581,8 +538,8 @@ export const handleRequest = async (req, res) => {
     if (req.method === "GET" && p === "/api/health") {
       return send(res, 200, {
         ok: true,
-        mpesa: missing.length ? `not configured (missing: ${missing.join(", ")})` : cfg.mode,
-        problems: configProblems,
+        mpesa: missing().length ? `not configured (missing: ${missing().join(", ")})` : mpesaConfig().mode,
+        problems: configProblems(),
         database: portal.status().connected ? "connected" : portal.status().error,
       });
     }
@@ -620,11 +577,16 @@ export const handleRequest = async (req, res) => {
 const server = http.createServer(handleRequest);
 
 /** Human-readable readiness, used by the dev server on startup */
-export const mpesaReadiness = () =>
-  (missing.length
-    ? `NOT configured — missing or placeholder in server/.env: ${missing.join(", ")}`
-    : `${cfg.mode} ready (shortcode ${cfg.shortcode}, ${cfg.transactionType})`) +
-  (configProblems.length ? `\n  ⚠ ${configProblems.join("\n  ⚠ ")}` : "");
+export const mpesaReadiness = () => {
+  const m = mpesaConfig();
+  const problems = configProblems();
+  return (
+    (missing().length
+      ? `NOT configured — missing: ${missing().join(", ")} (set them in the portal or server/.env)`
+      : `${m.mode} ready (shortcode ${m.shortcode}, ${m.transactionType})`) +
+    (problems.length ? `\n  ⚠ ${problems.join("\n  ⚠ ")}` : "")
+  );
+};
 
 // Start listening unless another script embeds this module (the React dev
 // server via src/setupProxy.js, or `npm run mpesa:check`). Don't rely on
@@ -633,16 +595,20 @@ export const mpesaReadiness = () =>
 const isMain = !process.env.IKONEX_API_EMBEDDED;
 
 if (isMain) {
-  if (!cfg.callbackSecret && !missing.length) {
+  if (!mpesaConfig().callbackSecret && !missing().length) {
     console.warn(
       "Tip: set MPESA_CALLBACK_SECRET so only Safaricom (who knows the secret URL) can report payments."
     );
   }
   server.listen(cfg.port, cfg.host, () => {
     console.log(`IKONEX API listening on http://${cfg.host}:${cfg.port}`);
-    console.log(`M-Pesa Express: ${mpesaReadiness()}`);
+    // Report after the database load so settings saved in the portal are included
+    portal.ready.finally(() => console.log(`M-Pesa Express: ${mpesaReadiness()}`));
   });
 }
 
-export { cfg, server, missing, getToken, darajaPost, password };
+/** Resolves once the database (and the settings saved in the portal) are loaded. */
+export const ready = portal.ready;
+
+export { cfg, server, getToken, darajaPost, password };
 export default server;

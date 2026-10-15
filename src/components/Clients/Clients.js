@@ -69,11 +69,11 @@ const Clients = () => {
         </div>
       </div>
       <style>{`
-        .clients-section { background:radial-gradient(800px 420px at 100% 0%,var(--brand-soft),transparent 60%),var(--bg); }
+        .clients-section { background:var(--bg); }
         .clients-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;list-style:none;padding:0;margin:0; }
         .client-tile { position:relative;display:flex;flex-direction:row;align-items:center;text-align:left;gap:12px;padding:14px 16px;text-decoration:none;height:100%;transition:transform .25s var(--ease),border-color .25s var(--ease); }
-        .client-tile:hover { transform:translateY(-3px);border-color:var(--brand-border); }
-        .client-tile__mark { flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--brand),var(--brand-2));color:#fff;font-weight:800;font-size:.9rem;letter-spacing:.02em; }
+        .client-tile:hover { transform:translateY(-3px);border-color:var(--border-strong); }
+        .client-tile__mark { flex:none;display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:var(--brand-soft);border:1px solid var(--brand-border);color:var(--brand-text);font-weight:800;font-size:.9rem;letter-spacing:.02em; }
         .client-tile__copy { display:flex;flex-direction:column;min-width:0; }
         .client-tile__copy strong { color:var(--heading);font-size:.95rem;line-height:1.25; }
         .client-tile__copy span { color:var(--text-muted);font-size:.78rem; }

@@ -9,21 +9,15 @@ import {
   FaEnvelope,
   FaSignInAlt,
   FaLaptopCode,
-  FaGlobe,
-  FaMobileAlt,
-  FaCode,
-  FaCubes,
-  FaShieldAlt,
-  FaPrint,
-  FaWifi,
-  FaDesktop,
-  FaNetworkWired,
-  FaTools,
-  FaConciergeBell,
-  FaPaintBrush,
   FaGraduationCap,
+  FaFlask,
+  FaBrain,
+  FaChartLine,
+  FaShieldAlt,
+  FaPaintBrush,
+  FaDesktop,
+  FaCubes,
   FaLightbulb,
-  FaHeadset,
 } from "react-icons/fa";
 
 import logo from "../../images/logo.png";
@@ -31,61 +25,20 @@ import ThemeToggle from "./ThemeToggle";
 import "./Navbar.css";
 
 /*
- * "What We Do" combines the former Software, Cyber, Computers and Services
- * menu items. Each former item is now a column heading (still a link) with
- * its related offerings listed underneath.
+ * "What We Do" menu: one flat list of service categories, shown as a 4 x 2 grid
+ * on desktop and a single list in the mobile sidebar. Links point at the
+ * existing pages/sections (AI and Data Analytics live on the Research page;
+ * there is no Computers page yet, so it opens the enquiry form).
  */
 const WHAT_WE_DO = [
-  {
-    key: "software",
-    label: "Software",
-    href: "/what-we-do#software",
-    icon: FaLaptopCode,
-    blurb: "Websites, apps & systems",
-    items: [
-      { label: "Web Development", href: "/what-we-do#software", icon: FaGlobe },
-      { label: "Mobile Development", href: "/what-we-do#software", icon: FaMobileAlt },
-      { label: "Software Development", href: "/what-we-do#software", icon: FaCode },
-      { label: "Enterprise Products", href: "/#products", icon: FaCubes },
-    ],
-  },
-  {
-    key: "cyber",
-    label: "Cyber & Digital Services",
-    href: "/cyber-digital-services",
-    icon: FaShieldAlt,
-    blurb: "Documents, applications & support",
-    items: [
-      { label: "Cyber Services", href: "/cyber-digital-services#cyber", icon: FaShieldAlt },
-      { label: "Online Services", href: "/cyber-digital-services#online-services", icon: FaWifi },
-      { label: "Graphics & Design", href: "/cyber-digital-services#graphics-design", icon: FaPaintBrush },
-      { label: "Branding & Printing", href: "/cyber-digital-services#branding-printing", icon: FaPrint },
-    ],
-  },
-  {
-    key: "computers",
-    label: "Computers",
-    href: "/",
-    icon: FaDesktop,
-    blurb: "Hardware, networks & IT",
-    items: [
-      { label: "Computer Solutions", href: "/", icon: FaDesktop },
-      { label: "Networking", href: "/", icon: FaNetworkWired },
-      { label: "Technology Consulting", href: "/", icon: FaTools },
-    ],
-  },
-  {
-    key: "services",
-    label: "Creative & Digital Services",
-    href: "/what-we-do#branding",
-    icon: FaConciergeBell,
-    blurb: "Design, branding, training & research",
-    items: [
-      { label: "Graphics, Print & Branding", href: "/what-we-do#branding", icon: FaPaintBrush },
-      { label: "Training Programs", href: "/training", icon: FaGraduationCap },
-      { label: "Research & Innovation", href: "/research", icon: FaLightbulb },
-    ],
-  },
+  { label: "Software Development", href: "/what-we-do#software", icon: FaLaptopCode, blurb: "Web, mobile & business systems" },
+  { label: "Software Development Training", href: "/training", icon: FaGraduationCap, blurb: "Practical, industry-led courses" },
+  { label: "Research & Innovation", href: "/research", icon: FaFlask, blurb: "Applied technology research" },
+  { label: "Artificial Intelligence", href: "/research", icon: FaBrain, blurb: "Automation & intelligent systems" },
+  { label: "Data Analytics", href: "/research", icon: FaChartLine, blurb: "Dashboards, reports & insight" },
+  { label: "Cyber Services", href: "/cyber-digital-services#cyber", icon: FaShieldAlt, blurb: "Documents, applications & support" },
+  { label: "Creative Design", href: "/cyber-digital-services#graphics-design", icon: FaPaintBrush, blurb: "Graphics, branding & print" },
+  { label: "Computers", href: "#contact", icon: FaDesktop, blurb: "Hardware, networking & IT support" },
 ];
 
 // Standalone pages linked directly from the top-level nav.
@@ -105,7 +58,7 @@ const NavbarComponent = () => {
 
   const megaRef = useRef(null);
   const triggerRef = useRef(null);
-  const closeTimer = useRef(null);
+  const panelRef = useRef(null);
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -173,17 +126,48 @@ const NavbarComponent = () => {
     };
   }, [isMegaOpen, isMobileMenuOpen]);
 
-  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  const megaTiles = () =>
+    panelRef.current ? Array.from(panelRef.current.querySelectorAll(".mega-tile")) : [];
 
-  const openMega = useCallback(() => {
-    clearTimeout(closeTimer.current);
+  // Open with the keyboard and move straight into the grid
+  const focusFirstTile = useRef(false);
+  const onTriggerKeyDown = useCallback((e) => {
+    if (e.key !== "ArrowDown") return;
+    e.preventDefault();
+    focusFirstTile.current = true;
     setIsMegaOpen(true);
   }, []);
 
-  const scheduleCloseMega = useCallback(() => {
-    clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setIsMegaOpen(false), 160);
-  }, []);
+  useEffect(() => {
+    if (!isMegaOpen || !focusFirstTile.current) return;
+    focusFirstTile.current = false;
+    const first = panelRef.current && panelRef.current.querySelector(".mega-tile");
+    if (first) first.focus();
+  }, [isMegaOpen]);
+
+  // Arrow keys move between tiles in reading order; Home/End jump to the ends
+  const onPanelKeyDown = (e) => {
+    const tiles = megaTiles();
+    const index = tiles.indexOf(document.activeElement);
+    if (index === -1) return;
+    const columns = window.matchMedia("(max-width: 1100px)").matches ? 2 : 4;
+    const moves = {
+      ArrowRight: index + 1,
+      ArrowLeft: index - 1,
+      ArrowDown: index + columns,
+      ArrowUp: index - columns,
+      Home: 0,
+      End: tiles.length - 1,
+    };
+    if (!(e.key in moves)) return;
+    e.preventDefault();
+    if (e.key === "ArrowUp" && index < columns) {
+      if (triggerRef.current) triggerRef.current.focus();
+      return;
+    }
+    const next = Math.min(Math.max(moves[e.key], 0), tiles.length - 1);
+    tiles[next].focus();
+  };
 
   const handleMegaBlur = (e) => {
     if (megaRef.current && !megaRef.current.contains(e.relatedTarget)) {
@@ -237,8 +221,6 @@ const NavbarComponent = () => {
               <li
                 className={`nav-mega ${isMegaOpen ? "is-open" : ""}`}
                 ref={megaRef}
-                onMouseEnter={openMega}
-                onMouseLeave={scheduleCloseMega}
                 onBlur={handleMegaBlur}
               >
                 <button
@@ -248,6 +230,7 @@ const NavbarComponent = () => {
                   aria-expanded={isMegaOpen}
                   aria-controls="what-we-do-menu"
                   onClick={() => setIsMegaOpen((v) => !v)}
+                  onKeyDown={onTriggerKeyDown}
                 >
                   What We Do
                   <FaChevronDown className="nav-mega__chevron" aria-hidden="true" />
@@ -258,74 +241,36 @@ const NavbarComponent = () => {
                   className="mega-panel"
                   role="region"
                   aria-label="What We Do"
+                  ref={panelRef}
+                  onKeyDown={onPanelKeyDown}
                 >
                   <div className="mega-panel__inner">
-                    <a href="/what-we-do" className="mega-overview" onClick={closeMega}>
-                      Explore everything we do
-                      <FaArrowRight aria-hidden="true" />
-                    </a>
-                    <div className="mega-grid">
-                      {WHAT_WE_DO.map((group) => {
-                        const GroupIcon = group.icon;
-                        return (
-                          <div className="mega-group" key={group.key}>
-                            <a
-                              href={group.href}
-                              className="mega-group__head"
-                              onClick={closeMega}
-                            >
-                              <span className="mega-group__icon">
-                                <GroupIcon aria-hidden="true" />
-                              </span>
-                              <span>
-                                <span className="mega-group__title">
-                                  {group.label}
-                                </span>
-                                <span className="mega-group__blurb">
-                                  {group.blurb}
-                                </span>
-                              </span>
-                            </a>
-
-                            <ul className="mega-list">
-                              {group.items.map((item) => {
-                                const ItemIcon = item.icon;
-                                return (
-                                  <li key={item.label}>
-                                    <a
-                                      href={item.href}
-                                      className="mega-item"
-                                      onClick={closeMega}
-                                    >
-                                      <ItemIcon
-                                        className="mega-item__icon"
-                                        aria-hidden="true"
-                                      />
-                                      <span>{item.label}</span>
-                                      <FaArrowRight
-                                        className="mega-item__arrow"
-                                        aria-hidden="true"
-                                      />
-                                    </a>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          </div>
-                        );
-                      })}
+                    <div className="mega-head">
+                      <span className="mega-head__title">Explore Our Services</span>
+                      <a href="/what-we-do" className="mega-head__all" onClick={closeMega}>
+                        View all
+                        <FaArrowRight aria-hidden="true" />
+                      </a>
                     </div>
 
-                    <a href="#contact" className="mega-cta" onClick={closeMega}>
-                      <span className="mega-cta__icon">
-                        <FaHeadset aria-hidden="true" />
-                      </span>
-                      <span className="mega-cta__text">
-                        <strong>Not sure where to start?</strong>
-                        <span>Tell us what you need and we'll point you the right way.</span>
-                      </span>
-                      <FaArrowRight className="mega-cta__arrow" aria-hidden="true" />
-                    </a>
+                    <ul className="mega-grid">
+                      {WHAT_WE_DO.map((service) => {
+                        const Icon = service.icon;
+                        return (
+                          <li key={service.label}>
+                            <a href={service.href} className="mega-tile" onClick={closeMega}>
+                              <span className="mega-tile__icon">
+                                <Icon aria-hidden="true" />
+                              </span>
+                              <span className="mega-tile__copy">
+                                <span className="mega-tile__title">{service.label}</span>
+                                <span className="mega-tile__blurb">{service.blurb}</span>
+                              </span>
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
                 </div>
               </li>
@@ -428,38 +373,27 @@ const NavbarComponent = () => {
 
             <div id="mobile-what-we-do" className="mobile-acc__panel">
               <div className="mobile-acc__inner">
-                <a href="/what-we-do" className="mobile-group__head" onClick={closeMenu}>
-                  <FaArrowRight aria-hidden="true" />
-                  Explore everything we do
-                </a>
-                {WHAT_WE_DO.map((group) => {
-                  const GroupIcon = group.icon;
-                  return (
-                    <div className="mobile-group" key={group.key}>
-                      <a
-                        href={group.href}
-                        className="mobile-group__head"
-                        onClick={closeMenu}
-                      >
-                        <GroupIcon aria-hidden="true" />
-                        {group.label}
-                      </a>
-                      <ul>
-                        {group.items.map((item) => {
-                          const ItemIcon = item.icon;
-                          return (
-                            <li key={item.label}>
-                              <a href={item.href} onClick={closeMenu}>
-                                <ItemIcon aria-hidden="true" />
-                                {item.label}
-                              </a>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  );
-                })}
+                <ul className="mobile-services">
+                  {WHAT_WE_DO.map((service) => {
+                    const Icon = service.icon;
+                    return (
+                      <li key={service.label}>
+                        <a href={service.href} onClick={closeMenu}>
+                          <span className="mobile-services__icon">
+                            <Icon aria-hidden="true" />
+                          </span>
+                          {service.label}
+                        </a>
+                      </li>
+                    );
+                  })}
+                  <li>
+                    <a href="/what-we-do" className="mobile-services__all" onClick={closeMenu}>
+                      View all services
+                      <FaArrowRight aria-hidden="true" />
+                    </a>
+                  </li>
+                </ul>
               </div>
             </div>
           </li>

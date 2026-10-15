@@ -183,7 +183,7 @@ const BulkPayments = ({ query, navigate }) => {
 
       {list.data && !list.data.ready && (
         <Notice tone="warn">
-          M-Pesa B2C isn't fully set up. Add to <code>server/.env</code>: {list.data.missing.join(", ")}. You can still prepare draft batches.
+          M-Pesa B2C isn't fully set up. Add {list.data.missing.join(", ")} under <a href="#/app/integrations?tab=mpesa">Settings → Integrations</a>. You can still prepare draft batches.
         </Notice>
       )}
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaCog, FaSave, FaDatabase, FaMobileAlt, FaMoneyCheckAlt, FaSms, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa";
+import { FaCog, FaSave, FaDatabase, FaMobileAlt, FaMoneyCheckAlt, FaSms, FaEnvelope, FaCheckCircle, FaExclamationTriangle, FaArrowRight } from "react-icons/fa";
 import { api, money } from "../api";
 import { Card, PageHeader, useLoad, useToast, Notice } from "../ui";
 
@@ -19,10 +19,12 @@ const Integration = ({ icon: Icon, title, ready, children }) => (
   </div>
 );
 
-const Missing = ({ list }) =>
-  list?.length ? (
-    <>Add to <code>server/.env</code>: {list.map((m, i) => (<React.Fragment key={m}>{i ? ", " : ""}<code>{m}</code></React.Fragment>))}</>
-  ) : null;
+const Missing = ({ list, tab }) => (
+  <>
+    {list?.length ? <>Missing: {list.join(", ")}. </> : null}
+    <a href={`#/app/integrations?tab=${tab}`}>Set up in Integrations</a>
+  </>
+);
 
 const FIELDS = [
   ["business_name", "Business name"],
@@ -122,17 +124,23 @@ const Settings = () => {
                 {i?.database?.describe}
               </Integration>
               <Integration icon={FaMobileAlt} title="M-Pesa Express (checkout)" ready={i?.mpesaExpress?.ready}>
-                {i?.mpesaExpress?.ready ? "Customers get the PIN prompt when they order." : <Missing list={i?.mpesaExpress?.missing} />}
+                {i?.mpesaExpress?.ready ? `Customers get the PIN prompt when they order (${i.mpesaExpress.mode}).` : <Missing list={i?.mpesaExpress?.missing} tab="mpesa" />}
               </Integration>
               <Integration icon={FaMoneyCheckAlt} title="M-Pesa B2C (bulk payments)" ready={i?.b2c?.ready}>
-                {i?.b2c?.ready ? `Short code ${i.b2c.shortcode} · max ${money(i.b2c.maxAmount)} per payee` : <Missing list={i?.b2c?.missing} />}
+                {i?.b2c?.ready ? `Short code ${i.b2c.shortcode} · max ${money(i.b2c.maxAmount)} per payee` : <Missing list={i?.b2c?.missing} tab="mpesa" />}
               </Integration>
               <Integration icon={FaSms} title="Africa's Talking (bulk SMS)" ready={i?.sms?.ready}>
                 {i?.sms?.ready
                   ? `Account ${i.sms.username}${i.sms.sandbox ? " (sandbox)" : ""}${i.sms.senderId ? ` · sender ${i.sms.senderId}` : ""}`
-                  : <Missing list={["AT_USERNAME", "AT_API_KEY"]} />}
+                  : <Missing tab="sms" />}
               </Integration>
-              <p className="px-muted px-small">API keys are only read from <code>server/.env</code> on the server and are never shown here. Restart the API after changing them.</p>
+              <Integration icon={FaEnvelope} title="Email (SMTP)" ready={i?.email?.ready}>
+                {i?.email?.ready ? `Sending as ${i.email.fromEmail}` : <Missing list={i?.email?.missing} tab="email" />}
+              </Integration>
+              <a className="ix-btn ix-btn--outline" href="#/app/integrations">
+                Manage email, SMS &amp; M-Pesa <FaArrowRight aria-hidden="true" />
+              </a>
+              <p className="px-muted px-small">Credentials are encrypted on the server and never shown here. Changes apply without a restart.</p>
             </div>
           </Card>
         </div>

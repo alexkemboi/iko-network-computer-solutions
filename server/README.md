@@ -252,6 +252,37 @@ Restart the API after editing `server/.env` (`pm2 restart ikonex-api --update-en
 
 ---
 
+## Integrations: email, SMS and M-Pesa from the portal
+
+Admins can set and test these credentials under **Portal → Administration → Integrations**
+(tabs for Email, SMS and M-Pesa). No code change, `.env` edit or restart is needed: the API
+reads the current settings on every email, SMS and payment.
+
+- **Precedence:** a value saved in the portal wins; an empty value falls back to the matching
+  `server/.env` variable (see `env.example.txt`), then to the built-in default. Existing
+  `.env`-only setups keep working unchanged.
+- **Encryption:** secrets (passwords, API keys, consumer key/secret, passkey, callback secret,
+  B2C security credential) are encrypted with AES-256-GCM before they are stored in the
+  `IntegrationConfigs` table. The key comes from `IKONEX_SETTINGS_KEY`, or is generated once
+  in `server/data/settings-key` (git-ignored). Back it up, and use the same key on every server —
+  values sealed with another key are reported in the portal and the `.env` values are used instead.
+- **Never exposed:** the API only reports whether a secret is saved. Secret values are never
+  returned to the browser, written to logs or the audit log; provider error messages are
+  scrubbed of them before they are shown.
+- **Permissions:** only `admin` users can open the page or call `/api/portal/integrations*`
+  (enforced on the server; the page is also hidden from other roles).
+- **Audit log:** every change and connection test is recorded in `IntegrationAudit` with the
+  admin, time and the names of the settings changed — never their values.
+- **Production M-Pesa:** saving with the Production environment is refused until every
+  required setting is present and valid (short code format, passkey length, HTTPS callback…).
+- **Tests:** Email sends a real test message; SMS sends a real SMS (free in the sandbox);
+  M-Pesa signs in to Daraja with the saved keys (no money moves — use `npm run mpesa:check -- 07…`
+  for a KES 1 end-to-end test).
+- **Email uses:** connection tests and a notification for every website enquiry (sent to
+  "Send website enquiries to", or the business email from Settings).
+
+Run the server tests with `npm run test:server`.
+
 ## PostgreSQL (current database)
 
 The app now runs on PostgreSQL. SQL Server is kept only as the source for the one-time copy.

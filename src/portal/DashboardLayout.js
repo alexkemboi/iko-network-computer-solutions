@@ -16,6 +16,8 @@ import {
   FaUserCircle,
   FaGlobe,
   FaChevronDown,
+  FaVoteYea,
+  FaPlug,
 } from "react-icons/fa";
 import logo from "../images/logo.png";
 import ThemeToggle from "../components/Navbar/ThemeToggle";
@@ -36,9 +38,13 @@ export const NAV = [
     { path: "/app/products", label: "Products", icon: FaCubes, roles: ["admin", "staff"] },
     { path: "/app/services", label: "Services", icon: FaConciergeBell, roles: ["admin", "staff"] },
   ] },
+  { group: "Platforms", items: [
+    { path: "/app/workspaces", label: "Campaign workspaces", icon: FaVoteYea, roles: ["admin"] },
+  ] },
   { group: "Administration", items: [
     { path: "/app/users", label: "Users", icon: FaUsers, roles: ["admin"] },
     { path: "/app/settings", label: "Settings", icon: FaCog, roles: ["admin"] },
+    { path: "/app/integrations", label: "Integrations", icon: FaPlug, roles: ["admin"] },
   ] },
 ];
 

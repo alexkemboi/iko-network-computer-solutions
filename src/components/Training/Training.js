@@ -223,11 +223,24 @@ const TrainingComponent = () => {
 
         .course-card .ix-card__text {
           font-size: .93rem;
-          margin-bottom: 16px;
+          line-height: 1.65;
+          min-height: calc(3 * 1.65em);
+          margin-bottom: 18px;
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .course-card__topics {
+          padding-top: 16px;
+          border-top: 1px solid var(--border);
+          gap: 9px;
         }
 
         .course-card__topics li {
           font-size: .9rem;
+          color: var(--heading);
         }
       `}</style>
     </section>
